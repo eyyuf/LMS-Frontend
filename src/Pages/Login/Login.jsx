@@ -92,7 +92,6 @@ const Login = () => {
                 <p className="footer-text">
                     Don't have an account? <Link to="/signup" className="link">Sign Up</Link>
                 </p>
-                <p className="hint-text">Try 'admin' as username for Admin Panel access.</p>
             </div>
         </div>
     );
