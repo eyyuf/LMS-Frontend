@@ -1,42 +1,98 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCourses } from '../../context/CourseContext';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../api/api';
 import './LessonView.css';
 
 const LessonView = () => {
     const { courseId, lessonId } = useParams();
-    const { courses, markLessonComplete, isLessonCompleted } = useCourses();
+    const { markLessonComplete, isLessonCompleted, completedLessons } = useCourses();
+    const { user } = useAuth();
+    const navigate = useNavigate();
+    const [course, setCourse] = useState(null);
+    const [lesson, setLesson] = useState(null);
+    const [lessons, setLessons] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const course = courses.find(c => c.id === parseInt(courseId));
-    const lesson = course?.lessons.find(l => l.id === parseInt(lessonId));
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!user?._id) {
+                navigate('/login');
+                return;
+            }
+            try {
+                // Backend routes are GET - auth middleware sets req.body.userId from token cookie
+                const courseRes = await api.get(`/lessons/getCourse/${courseId}`);
+                if (courseRes.data.success) {
+                    setCourse(courseRes.data.course);
+                }
+
+                // Fetch lesson
+                const lessonRes = await api.get(`/lessons/getLessons/${lessonId}`);
+                if (lessonRes.data.success) {
+                    setLesson(lessonRes.data.lesson);
+                }
+
+                // Fetch all lessons for navigation
+                const lessonsRes = await api.get(`/lessons/getLessonByCourse/${courseId}`);
+                if (lessonsRes.data.success) {
+                    const sortedLessons = (lessonsRes.data.lesson || []).sort((a, b) => a.order - b.order);
+                    setLessons(sortedLessons);
+                }
+            } catch (error) {
+                console.error("Failed to fetch lesson:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [courseId, lessonId, user, navigate]);
+
+    const [completing, setCompleting] = useState(false);
+    const isCompleted = isLessonCompleted(lessonId);
+
+    // Force re-render when completedLessons changes
+    useEffect(() => {
+        // This ensures component updates when completion status changes
+    }, [completedLessons, lessonId]);
+
+    const handleComplete = async () => {
+        if (!isCompleted && !completing) {
+            setCompleting(true);
+            const result = await markLessonComplete(lessonId);
+            if (result.success) {
+                // State will update automatically through context
+            } else {
+                alert(result.message || 'Failed to mark lesson as complete');
+            }
+            setCompleting(false);
+        }
+    };
+
+    // Prev/Next Logic
+    const currentIndex = lessons.findIndex(l => l._id === lessonId);
+    const prevLesson = currentIndex > 0 ? lessons[currentIndex - 1] : null;
+    const nextLesson = currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null;
+
+    if (loading) {
+        return <div className="lesson-view-container"><div className="loading">Loading...</div></div>;
+    }
 
     if (!course || !lesson) {
         return <div className="lesson-view-container"><h2>Lesson not found</h2></div>;
     }
-
-    const isCompleted = isLessonCompleted(parseInt(courseId), parseInt(lessonId));
-
-    const handleComplete = () => {
-        markLessonComplete(parseInt(courseId), parseInt(lessonId));
-    };
-
-    // Prev/Next Logic
-    const currentIndex = course.lessons.findIndex(l => l.id === parseInt(lessonId));
-    const prevLesson = currentIndex > 0 ? course.lessons[currentIndex - 1] : null;
-    const nextLesson = currentIndex < course.lessons.length - 1 ? course.lessons[currentIndex + 1] : null;
 
     return (
         <div className="lesson-view-container">
             <div className="lesson-header">
                 <div className="lesson-breadcrumbs">
                     <Link to="/courses">Courses</Link> /
-                    <Link to={`/course/${course.id}`}> {course.title}</Link> /
+                    <Link to={`/course/${courseId}`}> {course.title}</Link> /
                     <span> {lesson.title}</span>
                 </div>
                 <h1>{lesson.title}</h1>
-                <div className="scripture-ref">
-                    📚 Scripture: <strong>{lesson.scripture}</strong>
-                </div>
 
                 <div className="completion-stats">
                     {isCompleted ? (
@@ -48,53 +104,37 @@ const LessonView = () => {
             </div>
 
             <div className="lesson-content">
-                {lesson.image && (
+                {lesson.file && (
                     <div className="lesson-media-wrapper">
-                        <img src={lesson.image} alt="Lesson Visual" className="lesson-image" />
+                        <img src={lesson.file} alt="Lesson Visual" className="lesson-image" />
                     </div>
                 )}
 
-                {lesson.audio && (
-                    <div className="audio-player-wrapper">
-                        <span>🎧 Listen to Lesson:</span>
-                        <audio controls src={lesson.audio} className="lesson-audio">
-                            Your browser does not support the audio element.
-                        </audio>
-                    </div>
-                )}
-
-                <p>{lesson.content}</p>
-
-                {lesson.pdf && (
-                    <div className="pdf-resource">
-                        <a href={lesson.pdf} download={`Lesson-${lesson.id}-Resource.pdf`} className="btn-download">
-                            📄 Download Lesson PDF
-                        </a>
-                    </div>
-                )}
-
-                {/* Placeholder text if no custom content */}
-                {!lesson.content && (
+                <div className="lesson-text">
+                    {lesson.text ? (
+                        <p>{lesson.text}</p>
+                    ) : (
                     <p>
                         Reflection: As you meditate on this scripture, consider how it applies to your daily walk.
                         Faith is not just belief, but action. Take a moment to pray and ask God for wisdom in this area.
                     </p>
                 )}
+                </div>
 
                 <div className="lesson-action-area">
                     <button
                         className={`btn-mark-complete ${isCompleted ? 'completed' : ''}`}
                         onClick={handleComplete}
-                        disabled={isCompleted}
+                        disabled={isCompleted || completing}
                     >
-                        {isCompleted ? 'Lesson Completed' : 'Mark as Completed'}
+                        {completing ? 'Completing...' : isCompleted ? 'Lesson Completed ✓' : 'Mark as Completed'}
                     </button>
                 </div>
             </div>
 
             <div className="lesson-navigation">
                 {prevLesson ? (
-                    <Link to={`/course/${course.id}/lesson/${prevLesson.id}`} className="nav-btn prev">
+                    <Link to={`/course/${courseId}/lesson/${prevLesson._id}`} className="nav-btn prev">
                         ← {prevLesson.title}
                     </Link>
                 ) : (
@@ -102,11 +142,11 @@ const LessonView = () => {
                 )}
 
                 {nextLesson ? (
-                    <Link to={`/course/${course.id}/lesson/${nextLesson.id}`} className="nav-btn next">
+                    <Link to={`/course/${courseId}/lesson/${nextLesson._id}`} className="nav-btn next">
                         {nextLesson.title} →
                     </Link>
                 ) : (
-                    <Link to={`/course/${course.id}`} className="nav-btn finish">
+                    <Link to={`/course/${courseId}`} className="nav-btn finish">
                         Finish Course
                     </Link>
                 )}

@@ -1,0 +1,109 @@
+.leaderboard-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.leaderboard-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.tab {
+    background: none;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: #666;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.tab:hover {
+    color: #0A174E;
+}
+
+.tab.active {
+    color: #0A174E;
+    border-bottom-color: #0A174E;
+    font-weight: bold;
+}
+
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.leaderboard-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.leaderboard-item.current-user {
+    background: #F5D042;
+    font-weight: bold;
+}
+
+.rank {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #0A174E;
+    min-width: 40px;
+    text-align: center;
+}
+
+.user-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.league-icon {
+    font-size: 1.5rem;
+}
+
+.name {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.member-count {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.stats {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+}
+
+.xp {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #0A174E;
+}
+
+.league {
+    font-size: 0.9rem;
+    color: #666;
+    text-transform: uppercase;
+}
+

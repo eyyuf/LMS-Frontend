@@ -5,7 +5,7 @@ import './Home.css';
 import heroImg from '../../assets/hero_illustration_v2.png';
 
 const Home = () => {
-    const { courses } = useCourses();
+    const { courses, loading } = useCourses();
 
     return (
         <div className="home-container">
@@ -29,7 +29,7 @@ const Home = () => {
 
                     <div className="hero-stats">
                         <div className="stat-item">
-                            <span className="stat-number">3</span>
+                            <span className="stat-number">{courses.length}</span>
                             <span className="stat-label">Bible Studies</span>
                         </div>
                         <div className="stat-divider"></div>
@@ -53,16 +53,20 @@ const Home = () => {
                     <p>Start a new journey through the scriptures today.</p>
                 </div>
 
-                <div className="features-grid">
-                    {courses.slice(0, 3).map(course => (
-                        <div className="feature-card" key={course.id}>
-                            <div className="feature-icon icon-1">✝️</div>
-                            <h3>{course.title}</h3>
-                            <p>{course.description}</p>
-                            <Link to={`/course/${course.id}`} className="btn-link">Explore Course →</Link>
-                        </div>
-                    ))}
-                </div>
+                {loading ? (
+                    <div className="loading">Loading courses...</div>
+                ) : (
+                    <div className="features-grid">
+                        {courses.slice(0, 3).map(course => (
+                            <div className="feature-card" key={course._id}>
+                                <div className="feature-icon icon-1">✝️</div>
+                                <h3>{course.title}</h3>
+                                <Link to={`/course/${course._id}`} className="btn-link">Explore Course →</Link>
+                            </div>
+                        ))}
+                        {courses.length === 0 && <p>No courses available yet.</p>}
+                    </div>
+                )}
             </section>
         </div>
     );

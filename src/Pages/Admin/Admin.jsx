@@ -1,53 +1,76 @@
 import React, { useState } from 'react';
 import { useCourses } from '../../context/CourseContext';
+import { useAuth } from '../../context/AuthContext';
 import './Admin.css';
 
 const Admin = () => {
     const { courses, addCourse, addLessonToCourse, deleteCourse } = useCourses();
-    const [activeTab, setActiveTab] = useState('course'); // 'course' or 'lesson'
+    const { user } = useAuth();
+    const [activeTab, setActiveTab] = useState('course');
     const [notification, setNotification] = useState(null);
 
     // Course Form State
-    const [courseData, setCourseData] = useState({ title: '', description: '', category: '' });
+    const [courseData, setCourseData] = useState({ title: '' });
 
     // Lesson Form State
     const [lessonData, setLessonData] = useState({
-        courseId: '', title: '', scripture: '', content: '',
-        image: '', audio: '', pdf: ''
+        courseId: '', title: '', order: '', text: '', xp: '50', file: null
     });
+
+    if (!user || user.role !== 'ADMIN') {
+        return <div className="admin-wrapper"><h2>Access Denied. Admin only.</h2></div>;
+    }
 
     const showNotification = (msg) => {
         setNotification(msg);
         setTimeout(() => setNotification(null), 3000);
     };
 
-    const handleCourseSubmit = (e) => {
+    const handleCourseSubmit = async (e) => {
         e.preventDefault();
-        if (!courseData.title || !courseData.description) return;
+        if (!courseData.title) return;
 
-        addCourse(courseData);
-        setCourseData({ title: '', description: '', category: '' });
-        showNotification('New Study Course Added!');
+        const result = await addCourse(courseData.title);
+        if (result.success) {
+            setCourseData({ title: '' });
+            showNotification('Course Created Successfully!');
+        } else {
+            showNotification(result.message || 'Failed to create course');
+        }
     };
 
-    const handleLessonSubmit = (e) => {
+    const handleLessonSubmit = async (e) => {
         e.preventDefault();
-        if (!lessonData.courseId || !lessonData.title) return;
+        if (!lessonData.courseId || !lessonData.title || !lessonData.order || !lessonData.text) {
+            showNotification('Please fill in all required fields');
+            return;
+        }
 
-        addLessonToCourse(parseInt(lessonData.courseId), {
+        const result = await addLessonToCourse(lessonData.courseId, {
             title: lessonData.title,
-            scripture: lessonData.scripture,
-            content: lessonData.content,
-            image: lessonData.image,
-            audio: lessonData.audio,
-            pdf: lessonData.pdf
+            order: parseInt(lessonData.order),
+            text: lessonData.text,
+            xp: parseInt(lessonData.xp) || 50,
+            file: lessonData.file
         });
 
-        setLessonData(prev => ({
-            ...prev, title: '', scripture: '', content: '', image: '', audio: '', pdf: ''
-        }));
+        if (result.success) {
+            setLessonData({ courseId: '', title: '', order: '', text: '', xp: '50', file: null });
+            showNotification('Lesson Added Successfully!');
+        } else {
+            showNotification(result.message || 'Failed to add lesson');
+        }
+    };
 
-        showNotification('Lesson Added Successfully!');
+    const handleDeleteCourse = async (courseId) => {
+        if (window.confirm('Are you sure you want to delete this course?')) {
+            const result = await deleteCourse(courseId);
+            if (result.success) {
+                showNotification('Course Deleted Successfully!');
+            } else {
+                showNotification(result.message || 'Failed to delete course');
+            }
+        }
     };
 
     return (
@@ -75,26 +98,13 @@ const Admin = () => {
             <div className="admin-content">
                 {activeTab === 'course' ? (
                     <div className="form-card">
-                        <h3>Create New Bible Study</h3>
+                        <h3>Create New Bible Study Course</h3>
                         <form onSubmit={handleCourseSubmit}>
                             <input
                                 type="text"
-                                placeholder="Study Title (e.g. Book of Romans)"
+                                placeholder="Course Title"
                                 value={courseData.title}
                                 onChange={e => setCourseData({ ...courseData, title: e.target.value })}
-                                required
-                            />
-                            <input
-                                type="text"
-                                placeholder="Category (e.g. New Testament)"
-                                value={courseData.category}
-                                onChange={e => setCourseData({ ...courseData, category: e.target.value })}
-                                required
-                            />
-                            <textarea
-                                placeholder="Description"
-                                value={courseData.description}
-                                onChange={e => setCourseData({ ...courseData, description: e.target.value })}
                                 required
                             />
                             <button type="submit" className="btn-submit">Create Course</button>
@@ -111,7 +121,7 @@ const Admin = () => {
                             >
                                 <option value="">Select a Course...</option>
                                 {courses.map(c => (
-                                    <option key={c.id} value={c.id}>{c.title}</option>
+                                    <option key={c._id} value={c._id}>{c.title}</option>
                                 ))}
                             </select>
 
@@ -123,64 +133,41 @@ const Admin = () => {
                                 required
                             />
                             <input
-                                type="text"
-                                placeholder="Scripture Reference (e.g. John 3:16)"
-                                value={lessonData.scripture}
-                                onChange={e => setLessonData({ ...lessonData, scripture: e.target.value })}
+                                type="number"
+                                placeholder="Order (1, 2, 3...)"
+                                value={lessonData.order}
+                                onChange={e => setLessonData({ ...lessonData, order: e.target.value })}
+                                required
+                            />
+                            <input
+                                type="number"
+                                placeholder="XP Points (default: 50)"
+                                value={lessonData.xp}
+                                onChange={e => setLessonData({ ...lessonData, xp: e.target.value })}
                                 required
                             />
 
                             <div className="file-input-group">
-                                <label>Lesson Image:</label>
+                                <label>Lesson Image/File:</label>
                                 <input
                                     type="file"
                                     accept="image/*"
                                     onChange={e => {
                                         if (e.target.files[0]) {
-                                            const url = URL.createObjectURL(e.target.files[0]);
-                                            setLessonData(prev => ({ ...prev, image: url }));
-                                        }
-                                    }}
-                                />
-                            </div>
-
-                            <div className="file-input-group">
-                                <label>Audio Recording:</label>
-                                <input
-                                    type="file"
-                                    accept="audio/*"
-                                    onChange={e => {
-                                        if (e.target.files[0]) {
-                                            const url = URL.createObjectURL(e.target.files[0]);
-                                            setLessonData(prev => ({ ...prev, audio: url }));
-                                        }
-                                    }}
-                                />
-                            </div>
-
-                            <div className="file-input-group">
-                                <label>PDF Resource:</label>
-                                <input
-                                    type="file"
-                                    accept="application/pdf"
-                                    onChange={e => {
-                                        if (e.target.files[0]) {
-                                            const url = URL.createObjectURL(e.target.files[0]);
-                                            setLessonData(prev => ({ ...prev, pdf: url }));
+                                            setLessonData(prev => ({ ...prev, file: e.target.files[0] }));
                                         }
                                     }}
                                 />
                             </div>
 
                             <textarea
-                                placeholder="Lesson Content / Devotional Text"
-                                value={lessonData.content}
-                                onChange={e => setLessonData({ ...lessonData, content: e.target.value })}
+                                placeholder="Lesson Content / Text"
+                                value={lessonData.text}
+                                onChange={e => setLessonData({ ...lessonData, text: e.target.value })}
                                 rows="5"
                                 required
                             />
                             <button type="submit" className="btn-submit">Add Lesson</button>
-                            <p className="note-text">* Note: Uploaded files will reset on page reload (Demo Mode)</p>
                         </form>
                     </div>
                 )}
@@ -188,15 +175,19 @@ const Admin = () => {
                 <div className="admin-list-section">
                     <h3>Manage Courses</h3>
                     <div className="admin-course-list">
-                        {courses.map(course => (
-                            <div key={course.id} className="admin-course-item">
-                                <div className="course-info-summary">
-                                    <strong>{course.title}</strong>
-                                    <span>{course.lessons.length} Lessons</span>
+                        {courses.length === 0 ? (
+                            <p>No courses yet. Create one above!</p>
+                        ) : (
+                            courses.map(course => (
+                                <div key={course._id} className="admin-course-item">
+                                    <div className="course-info-summary">
+                                        <strong>{course.title}</strong>
+                                        <span>{course.lessons?.length || 0} Lessons</span>
+                                    </div>
+                                    <button className="btn-delete-sm" onClick={() => handleDeleteCourse(course._id)}>Delete</button>
                                 </div>
-                                <button className="btn-delete-sm" onClick={() => deleteCourse(course.id)}>Delete</button>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

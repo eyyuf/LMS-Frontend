@@ -43,6 +43,20 @@
     border-color: var(--primary);
 }
 
+.course-card-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    padding: 2.5rem 2rem;
+    color: white;
+}
+
+.course-card-header h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    color: white;
+    line-height: 1.3;
+}
+
 .course-card-content {
     padding: 2rem;
     flex: 1;

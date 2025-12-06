@@ -1,166 +1,227 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../api/api';
+import { useAuth } from './AuthContext';
 
 const CourseContext = createContext();
 
 export const useCourses = () => useContext(CourseContext);
 
 export const CourseProvider = ({ children }) => {
-    // Initial dummy data for Bible Courses
+    const { user } = useAuth();
     const [courses, setCourses] = useState([]);
+    const [enrolledCourses, setEnrolledCourses] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [completedLessons, setCompletedLessons] = useState([]);
 
-    // Fetch courses from API
+    // Fetch all courses
     useEffect(() => {
         const fetchCourses = async () => {
-            try {
-                // Determine endpoint based on what the backend offers, likely just /courses
-                // Backend provided shows separate lesson fetching, so /courses might return course list
-                const response = await api.get('/courses');
-                if (response.data.success) {
-                    setCourses(response.data.courses); // Adjust based on actual response structure
-                } else {
-                    // If backend response structure is different (e.g. array directly)
-                    setCourses(Array.isArray(response.data) ? response.data : []);
-                }
+            if (!user?._id) {
                 setLoading(false);
+                return;
+            }
+            try {
+                // Backend route is GET - auth middleware sets req.body.userId from token cookie
+                const response = await api.get('/lessons/getallcourses');
+                if (response.data.success) {
+                    setCourses(response.data.courses || []);
+                } else {
+                    console.error("Failed to fetch courses:", response.data.message);
+                    setCourses([]);
+                }
             } catch (err) {
                 console.error("Failed to fetch courses:", err);
-                // Keep empty or load from cache if implemented
+                setCourses([]);
+            } finally {
                 setLoading(false);
             }
         };
 
         fetchCourses();
-    }, []);
+    }, [user]);
 
-    // State for completed lessons: { courseId: [lessonId1, lessonId2, ...] }
-    const [completedLessons, setCompletedLessons] = useState(() => {
-        const stored = localStorage.getItem('cozy_progress');
-        return stored ? JSON.parse(stored) : {};
-    });
-
+    // Fetch enrolled courses
     useEffect(() => {
-        localStorage.setItem('cozy_courses', JSON.stringify(courses));
-    }, [courses]);
-
-    useEffect(() => {
-        localStorage.setItem('cozy_progress', JSON.stringify(completedLessons));
-    }, [completedLessons]);
-
-    const addCourse = (newCourse) => {
-        setCourses([...courses, { ...newCourse, id: Date.now(), lessons: [] }]);
-    };
-
-    const addLessonToCourse = (courseId, newLesson) => {
-        setCourses(courses.map(course => {
-            if (course.id === courseId) {
-                return {
-                    ...course,
-                    lessons: [...course.lessons, { ...newLesson, id: Date.now() }]
-                };
+        const fetchEnrolledCourses = async () => {
+            if (!user?._id) {
+                setEnrolledCourses([]);
+                return;
             }
-            return course;
-        }));
-    };
-
-    const deleteCourse = (courseId) => {
-        setCourses(courses.filter(c => c.id !== courseId));
-    };
-
-    // State for user stats (streak)
-    const [userStats, setUserStats] = useState(() => {
-        const stored = localStorage.getItem('cozy_stats');
-        return stored ? JSON.parse(stored) : { streak: 0, lastActiveDate: null };
-    });
-
-    useEffect(() => {
-        localStorage.setItem('cozy_stats', JSON.stringify(userStats));
-    }, [userStats]);
-
-    // ... existing useEffects ...
-
-    const markLessonComplete = (courseId, lessonId) => {
-        setCompletedLessons(prev => {
-            const courseProgress = prev[courseId] || [];
-            if (courseProgress.includes(lessonId)) return prev; // Already completed
-
-            // Update streak on new completion
-            updateStreak();
-
-            return {
-                ...prev,
-                [courseId]: [...courseProgress, lessonId]
-            };
-        });
-    };
-
-    // Fetch Streak from API on mount
-    useEffect(() => {
-        const fetchStreak = async () => {
             try {
-                const res = await api.post('/users/getStreak');
-                if (res.data.success) {
-                    setUserStats(prev => ({ ...prev, streak: res.data.streak }));
+                // Backend route is GET - auth middleware sets req.body.userId from token cookie
+                const response = await api.get('/lessons/getEnrolledCourses');
+                if (response.data.success) {
+                    setEnrolledCourses(response.data.courses || []);
+                } else {
+                    console.error("Failed to fetch enrolled courses:", response.data.message);
+                    setEnrolledCourses([]);
                 }
-            } catch (e) {
-                console.error("Failed to fetch streak", e);
+            } catch (err) {
+                console.error("Failed to fetch enrolled courses:", err);
+                setEnrolledCourses([]);
             }
         };
-        // Fetch only if user is logged in (check token existence roughly or useAuth)
-        if (localStorage.getItem('token')) {
-            fetchStreak();
-        }
-    }, []);
 
-    const updateStreak = async () => {
-        const today = new Date().toDateString();
-        const lastActive = userStats.lastActiveDate;
+        fetchEnrolledCourses();
+    }, [user]);
 
-        // Optimistic UI update logic locally first
-        if (lastActive === today) return;
+    // Fetch user's completed lessons
+    useEffect(() => {
+        const fetchUserData = async () => {
+            if (!user?._id) return;
+            try {
+                // Backend auth middleware sets req.body.userId from token cookie
+                const response = await api.post('/auth/get-user-data');
+                if (response.data.success && response.data.User.completedLessons) {
+                    setCompletedLessons(response.data.User.completedLessons.map(id => id.toString()));
+                }
+            } catch (err) {
+                console.error("Failed to fetch completed lessons:", err);
+            }
+        };
 
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayString = yesterday.toDateString();
+        fetchUserData();
+    }, [user]);
 
-        let newStreak = 1;
-        if (lastActive === yesterdayString) {
-            newStreak = userStats.streak + 1;
-        }
-
-        setUserStats({ streak: newStreak, lastActiveDate: today });
-
-        // Sync with Backend
+    const addCourse = async (title) => {
+        if (!user?._id) return { success: false, message: 'Not authenticated' };
         try {
-            await api.post('/users/streak', { streak: newStreak });
+            // Backend auth middleware sets req.body.userId from token cookie
+            const response = await api.post('/lessons/createCourse', { title });
+            if (response.data.success) {
+                setCourses(prev => [...prev, response.data.course]);
+                return { success: true, course: response.data.course };
+            }
+            return { success: false, message: response.data.message };
         } catch (error) {
-            console.error("Failed to sync streak:", error);
+            return { success: false, message: error.response?.data?.message || 'Failed to create course' };
+        }
+    };
+
+    const addLessonToCourse = async (courseId, lessonData) => {
+        if (!user?._id) return { success: false, message: 'Not authenticated' };
+        try {
+            const formData = new FormData();
+            formData.append('title', lessonData.title);
+            formData.append('order', lessonData.order);
+            formData.append('text', lessonData.text);
+            formData.append('xp', lessonData.xp || 50);
+            // Backend auth middleware sets req.body.userId from token cookie
+            if (lessonData.file) {
+                formData.append('file', lessonData.file);
+            }
+
+            const response = await api.post(`/lessons/createLesson/${courseId}`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            if (response.data.success) {
+                // Refresh courses
+                const coursesRes = await api.get('/lessons/getallcourses');
+                if (coursesRes.data.success) {
+                    setCourses(coursesRes.data.courses || []);
+                }
+                return { success: true, lesson: response.data.lesson };
+            }
+            return { success: false, message: response.data.message };
+        } catch (error) {
+            return { success: false, message: error.response?.data?.message || 'Failed to create lesson' };
+        }
+    };
+
+    const deleteCourse = async (courseId) => {
+        if (!user?._id) return { success: false, message: 'Not authenticated' };
+        try {
+            const response = await api.delete(`/lessons/deleteCourse/${courseId}`);
+            if (response.data.success) {
+                setCourses(prev => prev.filter(c => c._id !== courseId));
+                return { success: true };
+            }
+            return { success: false, message: response.data.message };
+        } catch (error) {
+            return { success: false, message: error.response?.data?.message || 'Failed to delete course' };
+        }
+    };
+
+    const enrollCourse = async (courseId) => {
+        if (!user?._id) return { success: false, message: 'Not authenticated' };
+        try {
+            // Backend auth middleware sets req.body.userId from token cookie
+            const response = await api.post(`/lessons/enrollCourse/${courseId}`);
+            if (response.data.success) {
+                setEnrolledCourses(prev => [...prev, response.data.course]);
+                return { success: true };
+            }
+            return { success: false, message: response.data.message };
+        } catch (error) {
+            return { success: false, message: error.response?.data?.message || 'Failed to enroll' };
+        }
+    };
+
+    const unenrollCourse = async (courseId) => {
+        if (!user?._id) return { success: false, message: 'Not authenticated' };
+        try {
+            // Backend auth middleware sets req.body.userId from token cookie
+            const response = await api.post(`/lessons/unenrollCourse/${courseId}`);
+            if (response.data.success) {
+                setEnrolledCourses(prev => prev.filter(c => c._id !== courseId));
+                return { success: true };
+            }
+            return { success: false, message: response.data.message };
+        } catch (error) {
+            return { success: false, message: error.response?.data?.message || 'Failed to unenroll' };
+        }
+    };
+
+    const markLessonComplete = async (lessonId) => {
+        if (!user?._id) return { success: false, message: 'Not authenticated' };
+        try {
+            // Backend auth middleware sets req.body.userId from token cookie
+            const response = await api.post(`/lessons/completeLesson/${lessonId}`);
+            if (response.data.success) {
+                setCompletedLessons(prev => [...prev, lessonId.toString()]);
+                // Update user data to refresh XP and streak
+                const userDataRes = await api.post('/auth/get-user-data');
+                if (userDataRes.data.success) {
+                    // Update badge/league
+                    await api.post('/user/updateBadge');
+                }
+                return { success: true };
+            }
+            return { success: false, message: response.data.message };
+        } catch (error) {
+            return { success: false, message: error.response?.data?.message || 'Failed to complete lesson' };
         }
     };
 
     const getCourseProgress = (courseId) => {
-        const course = courses.find(c => c.id === courseId);
-        if (!course || course.lessons.length === 0) return 0;
+        const course = courses.find(c => c._id === courseId);
+        if (!course || !course.lessons || course.lessons.length === 0) return 0;
 
-        const completed = completedLessons[courseId] || [];
+        const completed = completedLessons.filter(id => 
+            course.lessons.some(lesson => lesson._id?.toString() === id || lesson.toString() === id)
+        );
         return Math.round((completed.length / course.lessons.length) * 100);
     };
 
-    const isLessonCompleted = (courseId, lessonId) => {
-        return (completedLessons[courseId] || []).includes(lessonId);
+    const isLessonCompleted = (lessonId) => {
+        return completedLessons.includes(lessonId.toString());
     };
 
     return (
         <CourseContext.Provider value={{
             courses,
+            enrolledCourses,
+            loading,
             addCourse,
             addLessonToCourse,
             deleteCourse,
+            enrollCourse,
+            unenrollCourse,
             markLessonComplete,
             getCourseProgress,
             isLessonCompleted,
-            streak: userStats.streak
+            completedLessons
         }}>
             {children}
         </CourseContext.Provider>

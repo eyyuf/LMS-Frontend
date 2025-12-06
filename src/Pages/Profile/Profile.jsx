@@ -2,83 +2,50 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCourses } from '../../context/CourseContext';
 import { useAuth } from '../../context/AuthContext';
+import { useFamily } from '../../context/FamilyContext';
 import api from '../../api/api';
 import './Profile.css';
 
 const Profile = () => {
     const navigate = useNavigate();
-    const { courses, getCourseProgress, streak } = useCourses();
-    const { user: authUser } = useAuth(); // Get auth user
+    const { enrolledCourses, getCourseProgress } = useCourses();
+    const { user: authUser, getUserData, updateProfile } = useAuth();
+    const { family, createFamily, leaveFamily, addMember } = useFamily();
     const [isEditing, setIsEditing] = useState(false);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [showCreateFamily, setShowCreateFamily] = useState(false);
+    const [showAddMember, setShowAddMember] = useState(false);
+    const [familyName, setFamilyName] = useState('');
+    const [memberEmails, setMemberEmails] = useState('');
+    const [newMemberEmail, setNewMemberEmail] = useState('');
 
-    // Integrated user state
-    const [user, setUser] = useState({
-        name: authUser?.name || "Member",
-        email: authUser?.email || "",
-        joined: "2024",
-        bio: "Seeking to grow daily in the Word.",
-        avatar: authUser?.avatar || "https://i.pravatar.cc/150",
-        league: "BRONZE",
-        xp: 0,
-        streak: 0
-    });
-
-    // Fetch latest user data including stats
     useEffect(() => {
         const fetchUserData = async () => {
             if (authUser?._id) {
-                try {
-                    // Fetch fresh data from backend
-                    const res = await api.post('/users/get-user-data', { userId: authUser._id });
-
-                    if (res.data.success) {
-                        const backendUser = res.data.User;
-                        setUser(prev => ({
-                            ...prev,
-                            name: backendUser.name,
-                            email: backendUser.email,
-                            // Map backend 'avater' (typo in model) to frontend 'avatar'
-                            avatar: backendUser.avater || backendUser.avatar || prev.avatar,
-                            league: backendUser.league || "BRONZE",
-                            xp: backendUser.xp || 0,
-                            streak: backendUser.streak || 0
-                        }));
-                    }
-                } catch (e) {
-                    console.error("Failed to fetch fresh user data:", e);
-                    // Fallback: Try fetching specific stats if the monolithic endpoint isn't ready
-                    try {
-                        const [streakRes, xpRes] = await Promise.all([
-                            api.post('/users/getStreak', { userId: authUser._id }),
-                            api.post('/users/xp', { userId: authUser._id })
-                        ]);
-
-                        setUser(prev => ({
-                            ...prev,
-                            streak: streakRes.data.success ? streakRes.data.streak : prev.streak,
-                            xp: xpRes.data.success ? xpRes.data.xp : prev.xp,
-                            // Assumes league logic handles defaults or is included in streakRes if lucky, 
-                            // otherwise keeps default "BRONZE"
-                        }));
-                    } catch (fallbackErr) {
-                        console.warn("Could not fetch individual stats either.", fallbackErr);
-                    }
+                const result = await getUserData(authUser._id);
+                if (result.success && result.user) {
+                    setUser(result.user);
                 }
             }
+            setLoading(false);
         };
+        if (authUser) {
         fetchUserData();
-    }, [authUser]);
-
-    const [editForm, setEditForm] = useState(user);
+        } else {
+            setLoading(false);
+        }
+    }, [authUser, getUserData]);
 
     const handleEditClick = () => {
-        setEditForm(user);
         setIsEditing(true);
     };
 
-    const handleSave = () => {
-        setUser(editForm);
+    const handleSave = async () => {
+        if (authUser?._id) {
+            await updateProfile(authUser._id, user.name, user.avater);
         setIsEditing(false);
+        }
     };
 
     const handleCancel = () => {
@@ -86,21 +53,62 @@ const Profile = () => {
     };
 
     const handleChange = (e) => {
-        setEditForm({ ...editForm, [e.target.name]: e.target.value });
+        setUser({ ...user, [e.target.name]: e.target.value });
     };
 
-    // Calculate total lessons completed
-    const totalLessonsCompleted = courses.reduce((acc, course) => {
-        const progress = getCourseProgress(course.id);
-        const completedCount = Math.round((progress / 100) * course.lessons.length);
-        return acc + completedCount;
-    }, 0);
+    const handleCreateFamily = async () => {
+        const emails = memberEmails.split(',').map(e => e.trim()).filter(e => e);
+        const result = await createFamily(familyName, emails);
+        if (result.success) {
+            setShowCreateFamily(false);
+            setFamilyName('');
+            setMemberEmails('');
+        }
+    };
+
+    const handleLeaveFamily = async () => {
+        if (family?._id) {
+            if (window.confirm('Are you sure you want to leave this family?')) {
+                const result = await leaveFamily(family._id);
+                if (result.success) {
+                    // Refresh user data
+                    if (authUser?._id) {
+                        const userResult = await getUserData(authUser._id);
+                        if (userResult.success && userResult.user) {
+                            setUser(userResult.user);
+                        }
+                    }
+                } else {
+                    alert(result.message || 'Failed to leave family');
+                }
+            }
+        }
+    };
+
+    const handleAddMember = async () => {
+        if (family?._id && newMemberEmail.trim()) {
+            const result = await addMember(family._id, newMemberEmail.trim());
+            if (result.success) {
+                setNewMemberEmail('');
+                setShowAddMember(false);
+                alert('Member added successfully!');
+            } else {
+                alert(result.message || 'Failed to add member');
+            }
+        } else if (!newMemberEmail.trim()) {
+            alert('Please enter an email address');
+        }
+    };
+
+    if (loading || !user) {
+        return <div className="profile-wrapper"><div className="loading">Loading...</div></div>;
+    }
 
     return (
         <div className="profile-wrapper">
             <div className="profile-header-card">
                 <div className="profile-avatar">
-                    <img src={user.avatar} alt="Profile" />
+                    <img src="https://ui-avatars.com/api/?name=User&background=6B8F71&color=fff&size=150" alt="Profile" />
                 </div>
 
                 <div className="profile-info">
@@ -109,17 +117,10 @@ const Profile = () => {
                             <input
                                 type="text"
                                 name="name"
-                                value={editForm.name}
+                                value={user.name}
                                 onChange={handleChange}
                                 placeholder="Display Name"
                                 className="edit-input"
-                            />
-                            <textarea
-                                name="bio"
-                                value={editForm.bio}
-                                onChange={handleChange}
-                                placeholder="Share your testimony or bio..."
-                                className="edit-textarea"
                             />
                             <div className="edit-actions">
                                 <button className="btn-save" onClick={handleSave}>Save Changes</button>
@@ -130,8 +131,6 @@ const Profile = () => {
                         <>
                             <h1>{user.name}</h1>
                             <p className="profile-email">{user.email}</p>
-                            <p className="profile-joined">Member since {user.joined}</p>
-                            <p className="profile-bio">{user.bio}</p>
                             <button className="btn-edit" onClick={handleEditClick}>Edit Profile</button>
                         </>
                     )}
@@ -153,14 +152,86 @@ const Profile = () => {
                 </div>
             </div>
 
-            <div className="my-courses-section">
-                <h2>My Active Studies</h2>
-                <div className="my-courses-grid">
+            {/* Family Section */}
+            <div className="family-section">
+                <h2>My Family</h2>
+                {family ? (
+                    <div className="family-card">
+                        <div className="family-header">
+                            <div>
+                                <h3>{family.name}</h3>
+                                <p className="family-xp">✨ {family.xp || 0} Total XP</p>
+                            </div>
+                            <div className="family-header-actions">
+                                <button className="btn-add-member" onClick={() => setShowAddMember(true)}>
+                                    Add Member
+                                </button>
+                                <button className="btn-leave-family" onClick={handleLeaveFamily}>
+                                    Leave Family
+                                </button>
+                            </div>
+                        </div>
+                        {showAddMember && (
+                            <div className="add-member-form">
+                                <input
+                                    type="email"
+                                    placeholder="Enter member email"
+                                    value={newMemberEmail}
+                                    onChange={(e) => setNewMemberEmail(e.target.value)}
+                                />
+                                <div className="form-actions">
+                                    <button onClick={handleAddMember}>Add</button>
+                                    <button onClick={() => { setShowAddMember(false); setNewMemberEmail(''); }}>Cancel</button>
+                                </div>
+                            </div>
+                        )}
+                        <div className="family-members">
+                            {family.members?.map((member, idx) => (
+                                <div key={idx} className="family-member">
+                                    <span>{typeof member === 'object' ? member.name : 'Member'}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="no-family-card">
+                        <p>Join a family to grow together!</p>
+                        <button className="btn-create-family" onClick={() => setShowCreateFamily(true)}>
+                            Create Family
+                        </button>
+                        {showCreateFamily && (
+                            <div className="create-family-form">
+                                <input
+                                    type="text"
+                                    placeholder="Family Name"
+                                    value={familyName}
+                                    onChange={(e) => setFamilyName(e.target.value)}
+                                />
+                                <textarea
+                                    placeholder="Member emails (comma separated)"
+                                    value={memberEmails}
+                                    onChange={(e) => setMemberEmails(e.target.value)}
+                                />
+                                <div className="form-actions">
+                                    <button onClick={handleCreateFamily}>Create</button>
+                                    <button onClick={() => setShowCreateFamily(false)}>Cancel</button>
+                        </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
 
-                    {courses.map(course => {
-                        const progress = getCourseProgress(course.id);
+            <div className="my-courses-section">
+                <h2>My Enrolled Courses</h2>
+                <div className="my-courses-grid">
+                    {enrolledCourses.length === 0 ? (
+                        <p>No enrolled courses. Go to Courses to enroll!</p>
+                    ) : (
+                        enrolledCourses.map(course => {
+                            const progress = getCourseProgress(course._id);
                         return (
-                            <div key={course.id} className="my-course-card">
+                                <div key={course._id} className="my-course-card">
                                 <div className="my-course-info">
                                     <h3>{course.title}</h3>
                                     <span className="progress-label">{progress}% Complete</span>
@@ -170,14 +241,14 @@ const Profile = () => {
                                 </div>
                                 <button
                                     className="btn-continue"
-                                    onClick={() => navigate(`/course/${course.id}`)}
+                                        onClick={() => navigate(`/course/${course._id}`)}
                                 >
                                     {progress === 100 ? 'Review' : 'Continue'}
                                 </button>
                             </div>
-                        )
-                    })}
-                    {courses.length === 0 && <p>No active courses. Go to Courses to enroll!</p>}
+                            );
+                        })
+                    )}
                 </div>
             </div>
         </div>

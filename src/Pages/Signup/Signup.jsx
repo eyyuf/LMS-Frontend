@@ -1,34 +1,49 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import '../Login/Login.css'; // Reusing Login styles for consistency
+import { useAuth } from '../../context/AuthContext';
+import '../Login/Login.css';
 
 const Signup = () => {
     const navigate = useNavigate();
+    const { signup } = useAuth();
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+        setError('');
     };
 
-    const handleSignup = (e) => {
+    const handleSignup = async (e) => {
         e.preventDefault();
         setIsLoading(true);
+        setError('');
 
-        // Simulate API call
-        setTimeout(() => {
-            console.log("Registered:", formData);
+        if (!formData.name || !formData.email || !formData.password) {
+            setError('Please fill in all fields.');
             setIsLoading(false);
-            // Redirect to Login after 'successful' signup
+            return;
+        }
+
+        const result = await signup(formData);
+
+        if (result.success) {
             navigate('/login');
-        }, 1200);
+        } else {
+            setError(result.message || 'Signup failed.');
+        }
+
+        setIsLoading(false);
     };
 
     return (
         <div className="login-wrapper">
             <div className="login-container">
                 <h2>Create Account</h2>
-                <p className="login-subtitle">Join CozyLMS to start learning today.</p>
+                <p className="login-subtitle">Join FM_BLS to start your Bible learning journey today.</p>
+
+                {error && <div className="error-message">{error}</div>}
 
                 <form onSubmit={handleSignup}>
                     <div className="input-group">
