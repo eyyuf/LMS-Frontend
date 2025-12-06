@@ -1,0 +1,113 @@
+.detail-container {
+    max-width: 900px;
+    margin: 3rem auto;
+    padding: 2rem;
+}
+
+.course-hero {
+    text-align: center;
+    margin-bottom: 4rem;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid #eee;
+}
+
+.detail-cat {
+    text-transform: uppercase;
+    color: var(--secondary);
+    letter-spacing: 1px;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.course-hero h1 {
+    font-size: 3rem;
+    margin: 1rem 0;
+    color: var(--text-dark);
+}
+
+.course-hero p {
+    font-size: 1.2rem;
+    color: var(--text-light);
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.lessons-list h2 {
+    color: var(--text-dark);
+    margin-bottom: 2rem;
+}
+
+.lesson-row {
+    display: flex;
+    align-items: center;
+    background: var(--white);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    border: 1px solid #f5f5f5;
+    transition: transform 0.2s;
+}
+
+.lesson-row:hover {
+    transform: translateX(5px);
+    border-color: var(--primary);
+}
+
+.lesson-index {
+    font-size: 1.5rem;
+    color: #ccc;
+    font-weight: 700;
+    margin-right: 1.5rem;
+    width: 30px;
+    text-align: center;
+}
+
+.lesson-info {
+    flex: 1;
+}
+
+.lesson-info h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-dark);
+    font-size: 1.2rem;
+}
+
+.scripture-badge {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.btn-read {
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-read:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.back-link {
+    margin-top: 3rem;
+}
+
+.back-link a {
+    color: var(--text-light);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.back-link a:hover {
+    color: var(--primary);
+}

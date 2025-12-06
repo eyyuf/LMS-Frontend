@@ -1,0 +1,146 @@
+.lesson-view-container {
+    max-width: 800px;
+    margin: 3rem auto;
+    padding: 2rem;
+}
+
+.lesson-breadcrumbs {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+}
+
+.lesson-breadcrumbs a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.lesson-breadcrumbs a:hover {
+    text-decoration: underline;
+}
+
+.lesson-header h1 {
+    font-size: 2.5rem;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+}
+
+.scripture-ref {
+    display: inline-block;
+    background: #fff3e0;
+    /* Pale orange background specific to scripture can stay or be var */
+    color: var(--secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.lesson-content {
+    background: var(--white);
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    margin: 2rem 0;
+    line-height: 1.8;
+    color: var(--text-dark);
+    font-size: 1.1rem;
+}
+
+.lesson-content p {
+    margin-bottom: 1.5rem;
+}
+
+.lesson-media-wrapper {
+    margin-bottom: 2rem;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.lesson-image {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    display: block;
+}
+
+.audio-player-wrapper {
+    background: #f7f9f8;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border: 1px solid #eee;
+}
+
+.audio-player-wrapper span {
+    font-weight: 600;
+    color: var(--primary-dark);
+    font-size: 0.9rem;
+}
+
+.lesson-audio {
+    width: 100%;
+}
+
+.pdf-resource {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px dashed #ddd;
+}
+
+.btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--text-dark);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-download:hover {
+    background-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.lesson-navigation {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 3rem;
+}
+
+.nav-btn {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+    background: white;
+    border: 1px solid #ddd;
+    color: var(--text-light);
+}
+
+.nav-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.nav-btn.next,
+.nav-btn.finish {
+    background: var(--primary-dark);
+    color: white;
+    border: none;
+}
+
+.nav-btn.next:hover,
+.nav-btn.finish:hover {
+    background: var(--primary);
+    transform: translateX(3px);
+}

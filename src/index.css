@@ -1,0 +1,54 @@
+:root {
+  /* New Palette: Sage & Terracotta */
+  --primary: #6B8F71;
+  /* Sage Green */
+  --primary-dark: #4A6D56;
+  /* Dark Sage */
+  --primary-light: #E0EBE2;
+  /* Light Sage Hint */
+
+  --secondary: #D97C54;
+  /* Terracotta/Clay */
+  --secondary-hover: #BF6A46;
+
+  --text-dark: #2D3047;
+  /* Deep Navy/Charcoal */
+  --text-light: #66717E;
+  /* Soft Slate */
+
+  --bg-dark: #F0F4F1;
+  /* Light Grey/Green Tint */
+  --bg-light: #F7F7F2;
+  /* Warm Off-white */
+  --white: #FFFFFF;
+
+  --gradient-main: linear-gradient(135deg, var(--bg-light) 0%, #E9EFEC 100%);
+  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  font-family: 'Outfit', sans-serif;
+  /* Ensuring font is here */
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}

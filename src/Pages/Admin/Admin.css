@@ -1,0 +1,195 @@
+.admin-wrapper {
+    max-width: 1000px;
+    margin: 3rem auto;
+    padding: 2rem;
+}
+
+.admin-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.admin-header h2 {
+    color: var(--text-dark);
+    margin-bottom: 1.5rem;
+}
+
+.admin-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.tab-btn {
+    padding: 0.8rem 2rem;
+    border: 1px solid #ddd;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 8px;
+    font-weight: 600;
+    color: var(--text-light);
+    transition: all 0.3s;
+}
+
+.tab-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.admin-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+}
+
+@media (max-width: 768px) {
+    .admin-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+.form-card {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.form-card h3 {
+    margin-bottom: 1.5rem;
+    color: var(--text-dark);
+    font-size: 1.2rem;
+}
+
+.form-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-card input,
+.form-card textarea,
+.form-card select {
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+}
+
+.form-card textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.file-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background: #f9f9f9;
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 1px dashed #ddd;
+}
+
+.file-input-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.file-input-group input {
+    border: none;
+    padding: 0;
+    font-size: 0.9rem;
+}
+
+.btn-submit {
+    background-color: var(--secondary);
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-submit:hover {
+    background-color: var(--secondary-hover);
+}
+
+.note-text {
+    font-size: 0.8rem;
+    color: #999;
+    text-align: center;
+    margin-top: 1rem;
+    font-style: italic;
+}
+
+.admin-list-section {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.admin-course-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.admin-course-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.course-info-summary strong {
+    display: block;
+    color: var(--text-dark);
+}
+
+.course-info-summary span {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.btn-delete-sm {
+    background: #ffcdd2;
+    color: #c62828;
+    border: none;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--primary);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
