@@ -74,7 +74,7 @@ const Leaderboard = () => {
     };
 
     if (loading) {
-        return <div className="leaderboard-container"><div className="loading">Loading...</div></div>;
+        return <div className="leaderboard-container"><div className="loading-spinner"></div></div>;
     }
 
     return (

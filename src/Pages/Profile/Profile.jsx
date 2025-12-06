@@ -31,7 +31,7 @@ const Profile = () => {
             setLoading(false);
         };
         if (authUser) {
-        fetchUserData();
+            fetchUserData();
         } else {
             setLoading(false);
         }
@@ -44,7 +44,7 @@ const Profile = () => {
     const handleSave = async () => {
         if (authUser?._id) {
             await updateProfile(authUser._id, user.name, user.avater);
-        setIsEditing(false);
+            setIsEditing(false);
         }
     };
 
@@ -101,7 +101,7 @@ const Profile = () => {
     };
 
     if (loading || !user) {
-        return <div className="profile-wrapper"><div className="loading">Loading...</div></div>;
+        return <div className="profile-wrapper"><div className="loading-spinner"></div></div>;
     }
 
     return (
@@ -215,7 +215,7 @@ const Profile = () => {
                                 <div className="form-actions">
                                     <button onClick={handleCreateFamily}>Create</button>
                                     <button onClick={() => setShowCreateFamily(false)}>Cancel</button>
-                        </div>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -230,22 +230,22 @@ const Profile = () => {
                     ) : (
                         enrolledCourses.map(course => {
                             const progress = getCourseProgress(course._id);
-                        return (
+                            return (
                                 <div key={course._id} className="my-course-card">
-                                <div className="my-course-info">
-                                    <h3>{course.title}</h3>
-                                    <span className="progress-label">{progress}% Complete</span>
-                                    <div className="progress-bar">
-                                        <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                                    <div className="my-course-info">
+                                        <h3>{course.title}</h3>
+                                        <span className="progress-label">{progress}% Complete</span>
+                                        <div className="progress-bar">
+                                            <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                                        </div>
                                     </div>
-                                </div>
-                                <button
-                                    className="btn-continue"
+                                    <button
+                                        className="btn-continue"
                                         onClick={() => navigate(`/course/${course._id}`)}
-                                >
-                                    {progress === 100 ? 'Review' : 'Continue'}
-                                </button>
-                            </div>
+                                    >
+                                        {progress === 100 ? 'Review' : 'Continue'}
+                                    </button>
+                                </div>
                             );
                         })
                     )}
