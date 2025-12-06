@@ -39,9 +39,19 @@ export const CourseProvider = ({ children }) => {
         ];
     });
 
+    // State for completed lessons: { courseId: [lessonId1, lessonId2, ...] }
+    const [completedLessons, setCompletedLessons] = useState(() => {
+        const stored = localStorage.getItem('cozy_progress');
+        return stored ? JSON.parse(stored) : {};
+    });
+
     useEffect(() => {
         localStorage.setItem('cozy_courses', JSON.stringify(courses));
     }, [courses]);
+
+    useEffect(() => {
+        localStorage.setItem('cozy_progress', JSON.stringify(completedLessons));
+    }, [completedLessons]);
 
     const addCourse = (newCourse) => {
         setCourses([...courses, { ...newCourse, id: Date.now(), lessons: [] }]);
@@ -63,8 +73,39 @@ export const CourseProvider = ({ children }) => {
         setCourses(courses.filter(c => c.id !== courseId));
     };
 
+    const markLessonComplete = (courseId, lessonId) => {
+        setCompletedLessons(prev => {
+            const courseProgress = prev[courseId] || [];
+            if (courseProgress.includes(lessonId)) return prev; // Already completed
+            return {
+                ...prev,
+                [courseId]: [...courseProgress, lessonId]
+            };
+        });
+    };
+
+    const getCourseProgress = (courseId) => {
+        const course = courses.find(c => c.id === courseId);
+        if (!course || course.lessons.length === 0) return 0;
+
+        const completed = completedLessons[courseId] || [];
+        return Math.round((completed.length / course.lessons.length) * 100);
+    };
+
+    const isLessonCompleted = (courseId, lessonId) => {
+        return (completedLessons[courseId] || []).includes(lessonId);
+    };
+
     return (
-        <CourseContext.Provider value={{ courses, addCourse, addLessonToCourse, deleteCourse }}>
+        <CourseContext.Provider value={{
+            courses,
+            addCourse,
+            addLessonToCourse,
+            deleteCourse,
+            markLessonComplete,
+            getCourseProgress,
+            isLessonCompleted
+        }}>
             {children}
         </CourseContext.Provider>
     );

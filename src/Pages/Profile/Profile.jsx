@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCourses } from '../../context/CourseContext';
 import './Profile.css';
 
 const Profile = () => {
+    const navigate = useNavigate();
     const { courses } = useCourses();
     const [isEditing, setIsEditing] = useState(false);
 
@@ -105,7 +107,12 @@ const Profile = () => {
                                     <div className="progress-fill" style={{ width: '60%' }}></div>
                                 </div>
                             </div>
-                            <button className="btn-continue">Continue</button>
+                            <button
+                                className="btn-continue"
+                                onClick={() => navigate(`/course/${course.id}`)}
+                            >
+                                Continue
+                            </button>
                         </div>
                     ))}
                     {courses.length === 0 && <p>No active courses. Go to Courses to enroll!</p>}
