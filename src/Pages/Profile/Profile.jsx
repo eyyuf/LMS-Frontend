@@ -139,12 +139,12 @@ const Profile = () => {
 
             <div className="profile-stats">
                 <div className="stat-card">
-                    <h3>{user.league || "BRONZE"}</h3>
-                    <p>Current League 🏆</p>
+                    <div className="stat-icon-large">🏆</div>
+                    <p className="stat-label-bottom">{user.league || "BRONZE"}</p>
                 </div>
                 <div className="stat-card">
-                    <h3>{user.streak || 0} Day{user.streak !== 1 ? 's' : ''}</h3>
-                    <p>Reading Streak 🔥</p>
+                    <div className="stat-icon-large">🔥</div>
+                    <p className="stat-label-bottom">{user.streak || 0} Streak</p>
                 </div>
                 <div className="stat-card">
                     <h3>{user.xp || 0}</h3>

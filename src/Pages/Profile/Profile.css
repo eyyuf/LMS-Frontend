@@ -146,6 +146,26 @@
     box-shadow: var(--shadow-sm);
     border: 1px solid #f0f0f0;
     transition: transform 0.3s;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 160px;
+}
+
+.stat-icon-large {
+    font-size: 4rem;
+    margin-bottom: 0.5rem;
+    line-height: 1;
+}
+
+.stat-label-bottom {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: auto;
 }
 
 .stat-card:hover {
