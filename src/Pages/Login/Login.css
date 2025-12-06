@@ -75,6 +75,22 @@
     color: var(--primary-dark);
 }
 
+.forgot-password-link {
+    text-align: right;
+    margin-top: -0.5rem;
+}
+
+.forgot-password-link a {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    text-decoration: none;
+}
+
+.forgot-password-link a:hover {
+    color: var(--secondary);
+    text-decoration: underline;
+}
+
 .login-container button {
     width: 100%;
     padding: 1rem;

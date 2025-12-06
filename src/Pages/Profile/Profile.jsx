@@ -6,13 +6,13 @@ const Profile = () => {
     const { courses } = useCourses();
     const [isEditing, setIsEditing] = useState(false);
 
-    // Mock User Data
+
     const [user, setUser] = useState({
         name: "Faith Walker",
         email: "faith.walker@example.com",
         joined: "January 2024",
         bio: "Seeking to grow daily in the Word and walk in His wisdom.",
-        avatar: "https://i.pravatar.cc/150?u=faith" // Placeholder avatar
+        avatar: "https://i.pravatar.cc/150?u=faith"
     });
 
     const [editForm, setEditForm] = useState(user);
@@ -95,7 +95,7 @@ const Profile = () => {
             <div className="my-courses-section">
                 <h2>My Active Studies</h2>
                 <div className="my-courses-grid">
-                    {/* Simulating enrolled courses by taking the first 2 from context */}
+
                     {courses.slice(0, 2).map(course => (
                         <div key={course.id} className="my-course-card">
                             <div className="my-course-info">

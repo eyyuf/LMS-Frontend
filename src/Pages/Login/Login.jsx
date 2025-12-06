@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import './Login.css';
 
 const Login = () => {
     const navigate = useNavigate();
+    const { login } = useAuth();
     const [formData, setFormData] = useState({ username: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
@@ -23,13 +25,15 @@ const Login = () => {
             if (formData.username && formData.password) {
                 // Here you would normally validate against a backend
                 console.log("Logged in:", formData.username);
-                // Simulate success
+                // Integrate AuthContext login
+                login({ email: formData.username + '@example.com' });
+
                 setIsLoading(false);
                 // Simple role check simulation
                 if (formData.username.toLowerCase().includes('admin')) {
                     navigate('/admin');
                 } else {
-                    navigate('/lessons');
+                    navigate('/profile');
                 }
             } else {
                 setError('Please fill in all fields.');
@@ -73,6 +77,10 @@ const Login = () => {
                         >
                             {showPassword ? "Hide" : "Show"}
                         </span>
+                    </div>
+
+                    <div className="forgot-password-link">
+                        <Link to="/forgot-password">Forgot Password?</Link>
                     </div>
 
                     <button type="submit" disabled={isLoading} className={isLoading ? 'loading' : ''}>
