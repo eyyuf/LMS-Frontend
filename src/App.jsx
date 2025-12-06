@@ -13,30 +13,33 @@ import ForgotPassword from './Pages/ForgotPassword/ForgotPassword';
 import Footer from './components/Footer/Footer';
 import { CourseProvider } from './context/CourseContext';
 import { AuthProvider } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext';
 
 function App() {
     return (
-        <AuthProvider>
-            <CourseProvider>
-                <div className="app-container">
-                    <Navbar />
-                    <div className="main-content">
-                        <Routes>
-                            <Route path="/" element={<Home />} />
-                            <Route path="/courses" element={<Courses />} />
-                            <Route path="/admin" element={<Admin />} />
-                            <Route path="/course/:courseId" element={<CourseDetail />} />
-                            <Route path="/course/:courseId/lesson/:lessonId" element={<LessonView />} />
-                            <Route path="/login" element={<Login />} />
-                            <Route path="/signup" element={<Signup />} />
-                            <Route path="/forgot-password" element={<ForgotPassword />} />
-                            <Route path="/profile" element={<Profile />} />
-                        </Routes>
+        <LanguageProvider>
+            <AuthProvider>
+                <CourseProvider>
+                    <div className="app-container">
+                        <Navbar />
+                        <div className="main-content">
+                            <Routes>
+                                <Route path="/" element={<Home />} />
+                                <Route path="/courses" element={<Courses />} />
+                                <Route path="/admin" element={<Admin />} />
+                                <Route path="/course/:courseId" element={<CourseDetail />} />
+                                <Route path="/course/:courseId/lesson/:lessonId" element={<LessonView />} />
+                                <Route path="/login" element={<Login />} />
+                                <Route path="/signup" element={<Signup />} />
+                                <Route path="/forgot-password" element={<ForgotPassword />} />
+                                <Route path="/profile" element={<Profile />} />
+                            </Routes>
+                        </div>
+                        <Footer />
                     </div>
-                    <Footer />
-                </div>
-            </CourseProvider>
-        </AuthProvider>
+                </CourseProvider>
+            </AuthProvider>
+        </LanguageProvider>
     );
 }
 

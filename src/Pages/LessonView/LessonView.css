@@ -110,6 +110,58 @@
     box-shadow: var(--shadow-md);
 }
 
+/* Completion Badges */
+.badge-completed {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 0.3rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.badge-incomplete {
+    background-color: #eee;
+    color: #888;
+    padding: 0.3rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Mark Complete Button */
+.lesson-action-area {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid #eee;
+    text-align: center;
+}
+
+.btn-mark-complete {
+    background-color: var(--secondary);
+    color: white;
+    border: none;
+    padding: 1rem 2.5rem;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-mark-complete:hover {
+    background-color: var(--secondary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(217, 124, 84, 0.4);
+}
+
+.btn-mark-complete.completed {
+    background-color: var(--primary);
+    cursor: default;
+    transform: none;
+    box-shadow: none;
+}
+
 .lesson-navigation {
     display: flex;
     justify-content: space-between;

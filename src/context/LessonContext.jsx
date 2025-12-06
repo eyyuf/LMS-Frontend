@@ -1,35 +1,40 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const LessonContext = createContext();
 
-export const useLessons = () => useContext(LessonContext);
+export const useLesson = () => useContext(LessonContext);
 
 export const LessonProvider = ({ children }) => {
-    // Initialize from localStorage or default data
-    const [lessons, setLessons] = useState(() => {
-        const savedLessons = localStorage.getItem('cozy_lessons');
-        return savedLessons ? JSON.parse(savedLessons) : [
-            { id: 1, title: 'React Basics', description: 'Learn the fundamentals of React, Components, and Props.', category: 'Frontend' },
-            { id: 2, title: 'Advanced State Management', description: 'Deep dive into Context API, Redux, and Zustand.', category: 'Frontend' },
-            { id: 3, title: 'Node.js Essentials', description: 'Build scalable backend APIs using Node and Express.', category: 'Backend' }
-        ];
+    // We can migrate lesson-specific logic here if needed
+    // Currently properly handled in CourseContext, but setting up structure for future expansion
+
+    // Example: tracking reading time, notes per lesson, etc.
+    const [lessonNotes, setLessonNotes] = useState(() => {
+        const stored = localStorage.getItem('cozy_lesson_notes');
+        return stored ? JSON.parse(stored) : {};
     });
 
     useEffect(() => {
-        localStorage.setItem('cozy_lessons', JSON.stringify(lessons));
-    }, [lessons]);
+        localStorage.setItem('cozy_lesson_notes', JSON.stringify(lessonNotes));
+    }, [lessonNotes]);
 
-    const addLesson = (lesson) => {
-        const newLesson = { ...lesson, id: Date.now() };
-        setLessons([...lessons, newLesson]);
+    const saveNote = (lessonId, note) => {
+        setLessonNotes(prev => ({
+            ...prev,
+            [lessonId]: note
+        }));
     };
 
-    const deleteLesson = (id) => {
-        setLessons(lessons.filter(lesson => lesson.id !== id));
+    const getNote = (lessonId) => {
+        return lessonNotes[lessonId] || '';
     };
 
     return (
-        <LessonContext.Provider value={{ lessons, addLesson, deleteLesson }}>
+        <LessonContext.Provider value={{
+            lessonNotes,
+            saveNote,
+            getNote
+        }}>
             {children}
         </LessonContext.Provider>
     );

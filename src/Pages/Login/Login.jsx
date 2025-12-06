@@ -6,7 +6,7 @@ import './Login.css';
 const Login = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
-    const [formData, setFormData] = useState({ username: '', password: '' });
+    const [formData, setFormData] = useState({ email: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -16,30 +16,31 @@ const Login = () => {
         setError(''); // clear error on type
     };
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
         setIsLoading(true);
+        setError('');
 
-        // Simulate API call
-        setTimeout(() => {
-            if (formData.username && formData.password) {
-                // Here you would normally validate against a backend
-                console.log("Logged in:", formData.username);
-                // Integrate AuthContext login
-                login({ email: formData.username + '@example.com' });
+        if (!formData.email || !formData.password) {
+            setError('Please fill in all fields.');
+            setIsLoading(false);
+            return;
+        }
 
-                setIsLoading(false);
-                // Simple role check simulation
-                if (formData.username.toLowerCase().includes('admin')) {
-                    navigate('/admin');
-                } else {
-                    navigate('/profile');
-                }
-            } else {
-                setError('Please fill in all fields.');
-                setIsLoading(false);
-            }
-        }, 1000);
+        const credentials = {
+            email: formData.email,
+            password: formData.password
+        };
+
+        const result = await login(credentials);
+
+        if (result.success) {
+            navigate('/profile');
+        } else {
+            setError(result.message || 'Login failed.');
+        }
+
+        setIsLoading(false);
     };
 
     return (
@@ -53,10 +54,10 @@ const Login = () => {
                 <form onSubmit={handleLogin}>
                     <div className="input-group">
                         <input
-                            type="text"
-                            name="username"
-                            placeholder="Username"
-                            value={formData.username}
+                            type="email"
+                            name="email"
+                            placeholder="Email Address"
+                            value={formData.email}
                             onChange={handleChange}
                             required
                         />

@@ -88,6 +88,36 @@
     color: white;
 }
 
+.lang-switch-btn {
+    background: transparent;
+    border: 1px solid var(--text-light);
+    color: var(--text-dark);
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-left: 1rem;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.lang-switch-btn:hover {
+    border-color: var(--secondary);
+    color: var(--secondary);
+    background: rgba(217, 124, 84, 0.1);
+}
+
+@media (max-width: 768px) {
+    .lang-switch-btn {
+        margin-left: 0;
+        border-color: rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+}
+
 .hamburger {
     display: none;
     cursor: pointer;

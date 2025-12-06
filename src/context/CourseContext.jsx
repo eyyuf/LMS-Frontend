@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import api from '../api/api';
 
 const CourseContext = createContext();
 
@@ -6,38 +7,32 @@ export const useCourses = () => useContext(CourseContext);
 
 export const CourseProvider = ({ children }) => {
     // Initial dummy data for Bible Courses
-    const [courses, setCourses] = useState(() => {
-        const savedCourses = localStorage.getItem('cozy_courses');
-        return savedCourses ? JSON.parse(savedCourses) : [
-            {
-                id: 1,
-                title: 'Gospel of John',
-                description: 'Explore the life and deity of Christ through the eyes of the beloved disciple.',
-                category: 'New Testament',
-                lessons: [
-                    { id: 101, title: 'In the Beginning', scripture: 'John 1:1-18', content: 'The Word was with God, and the Word was God. This introduction sets the stage for the rest of the Gospel...' },
-                    { id: 102, title: 'The Wedding at Cana', scripture: 'John 2:1-11', content: 'Jesus transforms water into wine, signifying the new covenant joy...' }
-                ]
-            },
-            {
-                id: 2,
-                title: 'Walking in Wisdom',
-                description: 'A study of Proverbs for daily living and spiritual maturity.',
-                category: 'Old Testament',
-                lessons: [
-                    { id: 201, title: 'The Fear of the Lord', scripture: 'Proverbs 1:7', content: 'The beginning of knowledge starts with reverence for God...' },
-                    { id: 202, title: 'Trust in the Lord', scripture: 'Proverbs 3:5-6', content: 'Lean not on your own understanding, but in all your ways acknowledge Him...' }
-                ]
-            },
-            {
-                id: 3,
-                title: 'Ephesians: United in Christ',
-                description: 'Discover your identity and spiritual blessings in Christ Jesus.',
-                category: 'Epistles',
-                lessons: []
+    const [courses, setCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch courses from API
+    useEffect(() => {
+        const fetchCourses = async () => {
+            try {
+                // Determine endpoint based on what the backend offers, likely just /courses
+                // Backend provided shows separate lesson fetching, so /courses might return course list
+                const response = await api.get('/courses');
+                if (response.data.success) {
+                    setCourses(response.data.courses); // Adjust based on actual response structure
+                } else {
+                    // If backend response structure is different (e.g. array directly)
+                    setCourses(Array.isArray(response.data) ? response.data : []);
+                }
+                setLoading(false);
+            } catch (err) {
+                console.error("Failed to fetch courses:", err);
+                // Keep empty or load from cache if implemented
+                setLoading(false);
             }
-        ];
-    });
+        };
+
+        fetchCourses();
+    }, []);
 
     // State for completed lessons: { courseId: [lessonId1, lessonId2, ...] }
     const [completedLessons, setCompletedLessons] = useState(() => {
@@ -73,15 +68,75 @@ export const CourseProvider = ({ children }) => {
         setCourses(courses.filter(c => c.id !== courseId));
     };
 
+    // State for user stats (streak)
+    const [userStats, setUserStats] = useState(() => {
+        const stored = localStorage.getItem('cozy_stats');
+        return stored ? JSON.parse(stored) : { streak: 0, lastActiveDate: null };
+    });
+
+    useEffect(() => {
+        localStorage.setItem('cozy_stats', JSON.stringify(userStats));
+    }, [userStats]);
+
+    // ... existing useEffects ...
+
     const markLessonComplete = (courseId, lessonId) => {
         setCompletedLessons(prev => {
             const courseProgress = prev[courseId] || [];
             if (courseProgress.includes(lessonId)) return prev; // Already completed
+
+            // Update streak on new completion
+            updateStreak();
+
             return {
                 ...prev,
                 [courseId]: [...courseProgress, lessonId]
             };
         });
+    };
+
+    // Fetch Streak from API on mount
+    useEffect(() => {
+        const fetchStreak = async () => {
+            try {
+                const res = await api.post('/users/getStreak');
+                if (res.data.success) {
+                    setUserStats(prev => ({ ...prev, streak: res.data.streak }));
+                }
+            } catch (e) {
+                console.error("Failed to fetch streak", e);
+            }
+        };
+        // Fetch only if user is logged in (check token existence roughly or useAuth)
+        if (localStorage.getItem('token')) {
+            fetchStreak();
+        }
+    }, []);
+
+    const updateStreak = async () => {
+        const today = new Date().toDateString();
+        const lastActive = userStats.lastActiveDate;
+
+        // Optimistic UI update logic locally first
+        if (lastActive === today) return;
+
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayString = yesterday.toDateString();
+
+        let newStreak = 1;
+        if (lastActive === yesterdayString) {
+            newStreak = userStats.streak + 1;
+        }
+
+        setUserStats({ streak: newStreak, lastActiveDate: today });
+
+        // Sync with Backend
+        try {
+            await api.post('/users/streak', { streak: newStreak });
+        } catch (error) {
+            console.error("Failed to sync streak:", error);
+        }
     };
 
     const getCourseProgress = (courseId) => {
@@ -104,7 +159,8 @@ export const CourseProvider = ({ children }) => {
             deleteCourse,
             markLessonComplete,
             getCourseProgress,
-            isLessonCompleted
+            isLessonCompleted,
+            streak: userStats.streak
         }}>
             {children}
         </CourseContext.Provider>

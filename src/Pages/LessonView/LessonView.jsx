@@ -5,7 +5,7 @@ import './LessonView.css';
 
 const LessonView = () => {
     const { courseId, lessonId } = useParams();
-    const { courses } = useCourses();
+    const { courses, markLessonComplete, isLessonCompleted } = useCourses();
 
     const course = courses.find(c => c.id === parseInt(courseId));
     const lesson = course?.lessons.find(l => l.id === parseInt(lessonId));
@@ -13,6 +13,12 @@ const LessonView = () => {
     if (!course || !lesson) {
         return <div className="lesson-view-container"><h2>Lesson not found</h2></div>;
     }
+
+    const isCompleted = isLessonCompleted(parseInt(courseId), parseInt(lessonId));
+
+    const handleComplete = () => {
+        markLessonComplete(parseInt(courseId), parseInt(lessonId));
+    };
 
     // Prev/Next Logic
     const currentIndex = course.lessons.findIndex(l => l.id === parseInt(lessonId));
@@ -30,6 +36,14 @@ const LessonView = () => {
                 <h1>{lesson.title}</h1>
                 <div className="scripture-ref">
                     📚 Scripture: <strong>{lesson.scripture}</strong>
+                </div>
+
+                <div className="completion-stats">
+                    {isCompleted ? (
+                        <span className="badge-completed">✓ Completed</span>
+                    ) : (
+                        <span className="badge-incomplete">In Progress</span>
+                    )}
                 </div>
             </div>
 
@@ -66,6 +80,16 @@ const LessonView = () => {
                         Faith is not just belief, but action. Take a moment to pray and ask God for wisdom in this area.
                     </p>
                 )}
+
+                <div className="lesson-action-area">
+                    <button
+                        className={`btn-mark-complete ${isCompleted ? 'completed' : ''}`}
+                        onClick={handleComplete}
+                        disabled={isCompleted}
+                    >
+                        {isCompleted ? 'Lesson Completed' : 'Mark as Completed'}
+                    </button>
+                </div>
             </div>
 
             <div className="lesson-navigation">
