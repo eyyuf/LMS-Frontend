@@ -13,7 +13,7 @@ const Login = () => {
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
-        setError(''); // clear error on type
+        setError('');
     };
 
     const handleLogin = async (e) => {

@@ -56,27 +56,33 @@ const Home = () => {
                 {loading ? (
                     <div className="loading">Loading courses...</div>
                 ) : (
-                    <div className="features-grid">
-                        {courses.slice(0, 3).map(course => (
-                            <div className="course-card" key={course._id}>
-                                <div className="course-card-header">
-                                    <h3>{course.title}</h3>
-                                </div>
-                                <div className="course-card-content">
-                                    <div className="course-meta">
-                                        <span>📖 {course.lessons?.length || 0} Lessons</span>
+                    <>
+                        <div className="features-grid">
+                            {courses.slice(0, 3).map(course => (
+                                <div className="course-card" key={course._id}>
+                                    <div className="course-card-header">
+                                        <h3>{course.title}</h3>
+                                    </div>
+                                    <div className="course-card-content">
+                                        <div className="course-meta">
+                                            <span>📖 {course.lessons?.length || 0} Lessons</span>
+                                        </div>
+                                    </div>
+                                    <div className="course-card-footer">
+                                        <Link to={`/course/${course._id}`} className="btn-explore">Enroll Now</Link>
                                     </div>
                                 </div>
-                                <div className="course-card-footer">
-                                    <Link to={`/course/${course._id}`} className="btn-explore">Enroll Now</Link>
-                                </div>
-                            </div>
-                        ))}
-                        {courses.length === 0 && <p>No courses available yet.</p>}
-                    </div>
+                            ))}
+                            {courses.length === 0 && <p>No courses available yet.</p>}
+                        </div>
+
+                        <div className="view-more-container">
+                            <Link to="/courses" className="btn-view-more">More &rarr;</Link>
+                        </div>
+                    </>
                 )}
             </section>
-        </div>
+        </div >
     );
 };
 

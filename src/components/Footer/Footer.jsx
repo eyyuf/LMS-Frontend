@@ -36,7 +36,7 @@ const Footer = () => {
                 </div>
             </div>
             <div className="footer-bottom">
-                <p>&copy; {new Date().getFullYear()} Christian Fellowship Platform. All rights reserved.</p>
+                <p>&copy; {new Date().getFullYear()} ASTUECSF. All rights reserved.  developed by <a href="https://eyyu.vercel.app/" target="_blank" style={{ color: 'blue' }}>Eyu</a> & <a href="https://Izzyt.netlify.app" target="_blank" style={{ color: 'blue' }}>Izzyt</a></p>
             </div>
         </footer>
     );

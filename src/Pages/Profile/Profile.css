@@ -605,4 +605,8 @@
     .btn-continue {
         width: 100%;
     }
+
+    .edit-profile-form {
+        min-width: unset;
+    }
 }
