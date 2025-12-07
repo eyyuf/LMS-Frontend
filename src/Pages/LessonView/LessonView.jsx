@@ -106,7 +106,20 @@ const LessonView = () => {
             <div className="lesson-content">
                 {lesson.file && (
                     <div className="lesson-media-wrapper">
-                        <img src={lesson.file} alt="Lesson Visual" className="lesson-image" />
+                        {lesson.file.toLowerCase().endsWith('.pdf') ? (
+                            <a href={lesson.file} target="_blank" rel="noopener noreferrer" className="btn-download-pdf">
+                                📄 Open / Download PDF Lesson
+                            </a>
+                        ) : lesson.file.match(/\.(mp4|webm|ogg)$/i) ? (
+                            <div className="video-container">
+                                <video controls className="lesson-video">
+                                    <source src={lesson.file} type="video/mp4" />
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        ) : (
+                            <img src={lesson.file} alt="Lesson Visual" className="lesson-image" />
+                        )}
                     </div>
                 )}
 
@@ -114,11 +127,11 @@ const LessonView = () => {
                     {lesson.text ? (
                         <p>{lesson.text}</p>
                     ) : (
-                    <p>
-                        Reflection: As you meditate on this scripture, consider how it applies to your daily walk.
-                        Faith is not just belief, but action. Take a moment to pray and ask God for wisdom in this area.
-                    </p>
-                )}
+                        <p>
+                            Reflection: As you meditate on this scripture, consider how it applies to your daily walk.
+                            Faith is not just belief, but action. Take a moment to pray and ask God for wisdom in this area.
+                        </p>
+                    )}
                 </div>
 
                 <div className="lesson-action-area">
