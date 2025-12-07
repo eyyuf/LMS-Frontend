@@ -26,7 +26,7 @@ const CourseDetail = () => {
                 const courseRes = await api.get(`/lessons/getCourse/${courseId}`);
                 if (courseRes.data.success) {
                     setCourse(courseRes.data.course);
-                    
+
                     // Check if enrolled
                     const enrolledRes = await api.get('/lessons/getEnrolledCourses');
                     if (enrolledRes.data.success) {
@@ -74,11 +74,7 @@ const CourseDetail = () => {
         <div className="detail-container">
             <div className="course-hero">
                 <h1>{course.title}</h1>
-                {!isEnrolled && (
-                    <button onClick={handleEnroll} className="btn-enroll">
-                        Enroll in Course
-                    </button>
-                )}
+
             </div>
 
             <div className="lessons-list">

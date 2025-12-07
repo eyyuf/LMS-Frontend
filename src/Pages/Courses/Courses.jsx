@@ -1,10 +1,22 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCourses } from '../../context/CourseContext';
+import { useAuth } from '../../context/AuthContext';
 import './Courses.css';
 
 const Courses = () => {
-    const { courses, loading } = useCourses();
+    const { courses, loading, enrollCourse } = useCourses();
+    const { user } = useAuth();
+    const navigate = useNavigate();
+
+    const handleStartStudy = async (courseId) => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+        await enrollCourse(courseId);
+        navigate(`/course/${courseId}`);
+    };
 
     if (loading) {
         return <div className="courses-page"><div className="loading">Loading courses...</div></div>;
@@ -32,13 +44,19 @@ const Courses = () => {
                                 </div>
                             </div>
                             <div className="course-card-footer">
-                                <Link to={`/course/${course._id}`} className="btn-explore">Start Study</Link>
+                                <button
+                                    onClick={() => handleStartStudy(course._id)}
+                                    className="btn-explore"
+                                    style={{ border: 'none', cursor: 'pointer', fontSize: '1rem', fontFamily: 'inherit' }}
+                                >
+                                    Start Study
+                                </button>
                             </div>
                         </div>
                     ))
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 
