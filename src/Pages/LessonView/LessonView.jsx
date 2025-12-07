@@ -17,10 +17,10 @@ const LessonView = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            if (!user?._id) {
-                navigate('/login');
-                return;
-            }
+            // if (!user?._id) {
+            //     navigate('/login');
+            //     return;
+            // }
             try {
                 // Backend routes are GET - auth middleware sets req.body.userId from token cookie
                 const courseRes = await api.get(`/lessons/getCourse/${courseId}`);
@@ -106,20 +106,7 @@ const LessonView = () => {
             <div className="lesson-content">
                 {lesson.file && (
                     <div className="lesson-media-wrapper">
-                        {lesson.file.toLowerCase().endsWith('.pdf') ? (
-                            <a href={lesson.file} target="_blank" rel="noopener noreferrer" className="btn-download-pdf">
-                                📄 Open / Download PDF Lesson
-                            </a>
-                        ) : lesson.file.match(/\.(mp4|webm|ogg)$/i) ? (
-                            <div className="video-container">
-                                <video controls className="lesson-video">
-                                    <source src={lesson.file} type="video/mp4" />
-                                    Your browser does not support the video tag.
-                                </video>
-                            </div>
-                        ) : (
-                            <img src={lesson.file} alt="Lesson Visual" className="lesson-image" />
-                        )}
+                        <img src={lesson.file} alt="Lesson Visual" className="lesson-image" />
                     </div>
                 )}
 
