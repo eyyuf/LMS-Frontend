@@ -106,7 +106,20 @@ const LessonView = () => {
             <div className="lesson-content">
                 {lesson.file && (
                     <div className="lesson-media-wrapper">
-                        <img src={lesson.file} alt="Lesson Visual" className="lesson-image" />
+                        {lesson.file.toLowerCase().endsWith('.pdf') ? (
+                            <a href={lesson.file} download target="_blank" rel="noopener noreferrer" className="btn-download-pdf">
+                                📄 Download PDF Lesson
+                            </a>
+                        ) : (lesson.file.match(/\.(mp4|webm|ogg)$/i) || lesson.file.includes('/video/')) ? (
+                            <div className="video-container">
+                                <video controls className="lesson-video">
+                                    <source src={lesson.file} type="video/mp4" />
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        ) : (
+                            <img src={lesson.file} alt="Lesson Visual" className="lesson-image" />
+                        )}
                     </div>
                 )}
 
