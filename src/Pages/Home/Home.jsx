@@ -29,12 +29,12 @@ const Home = () => {
 
                     <div className="hero-stats">
                         <div className="stat-item">
-                            <span className="stat-number">{courses.length}</span>
+                            <span className="stat-number">100+</span>
                             <span className="stat-label">Bible Studies</span>
                         </div>
                         <div className="stat-divider"></div>
                         <div className="stat-item">
-                            <span className="stat-number">100+</span>
+                            <span className="stat-number">1000+</span>
                             <span className="stat-label">Fellowship Members</span>
                         </div>
                     </div>

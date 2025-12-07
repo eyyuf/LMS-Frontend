@@ -16,10 +16,8 @@ export const CourseProvider = ({ children }) => {
     // Fetch all courses
     useEffect(() => {
         const fetchCourses = async () => {
-            if (!user?._id) {
-                setLoading(false);
-                return;
-            }
+            // Removed user check to allow public course fetching
+            // if (!user?._id) { ... }
             try {
                 // Backend route is GET - auth middleware sets req.body.userId from token cookie
                 const response = await api.get('/lessons/getallcourses');
@@ -198,7 +196,7 @@ export const CourseProvider = ({ children }) => {
         const course = courses.find(c => c._id === courseId);
         if (!course || !course.lessons || course.lessons.length === 0) return 0;
 
-        const completed = completedLessons.filter(id => 
+        const completed = completedLessons.filter(id =>
             course.lessons.some(lesson => lesson._id?.toString() === id || lesson.toString() === id)
         );
         return Math.round((completed.length / course.lessons.length) * 100);
