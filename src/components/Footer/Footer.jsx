@@ -12,7 +12,7 @@ const Footer = () => {
         <footer className="footer">
             <div className="footer-content">
                 <div className="footer-brand">
-                    <h3>FMB<span>LS</span></h3>
+                    <h3>FM<span>BLS</span></h3>
                     <p>Walking in wisdom, growing in faith. A community dedicated to spiritual growth and fellowship.</p>
                 </div>
 
