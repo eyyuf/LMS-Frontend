@@ -12,6 +12,7 @@ import Signup from './Pages/Signup/Signup';
 import ForgotPassword from './Pages/ForgotPassword/ForgotPassword';
 import Quiz from './Pages/Quiz/Quiz';
 import Leaderboard from './Pages/Leaderboard/Leaderboard';
+import Blog from './Pages/Blog/Blog';
 import Footer from './components/Footer/Footer';
 import { CourseProvider } from './context/CourseContext';
 import { AuthProvider } from './context/AuthContext';
@@ -37,6 +38,7 @@ function App() {
                                 <Route path="/forgot-password" element={<ForgotPassword />} />
                                 <Route path="/profile" element={<Profile />} />
                                 <Route path="/leaderboard" element={<Leaderboard />} />
+                                <Route path="/blog" element={<Blog />} />
                             </Routes>
                         </div>
                         <Footer />

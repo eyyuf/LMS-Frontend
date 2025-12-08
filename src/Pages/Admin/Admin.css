@@ -115,8 +115,14 @@
     transition: background 0.3s;
 }
 
-.btn-submit:hover {
+.btn-submit:hover:not(:disabled) {
     background-color: var(--secondary-hover);
+}
+
+.btn-submit:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
 .note-text {

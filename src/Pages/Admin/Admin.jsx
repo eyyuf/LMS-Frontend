@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useCourses } from '../../context/CourseContext';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../api/api';
+import axios from 'axios';
 import './Admin.css';
 
 const Admin = () => {
@@ -8,6 +10,7 @@ const Admin = () => {
     const { user } = useAuth();
     const [activeTab, setActiveTab] = useState('course');
     const [notification, setNotification] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Course Form State
     const [courseData, setCourseData] = useState({ title: '' });
@@ -15,6 +18,14 @@ const Admin = () => {
     // Lesson Form State
     const [lessonData, setLessonData] = useState({
         courseId: '', title: '', order: '', text: '', xp: '50', file: null
+    });
+
+    // Blog Form State
+    const [blogData, setBlogData] = useState({
+        title: '',
+        content: '',
+        author: '',
+        media: []
     });
 
     if (!user || user.role !== 'ADMIN') {
@@ -73,6 +84,67 @@ const Admin = () => {
         }
     };
 
+    const handleBlogSubmit = async (e) => {
+        e.preventDefault();
+        if (!blogData.title || !blogData.content || !blogData.author) {
+            showNotification('Please fill in all fields (title, author, content)');
+            return;
+        }
+        if (!blogData.media || blogData.media.length === 0) {
+            showNotification('Please upload at least one image/video');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const formData = new FormData();
+            formData.append('title', blogData.title.trim());
+            formData.append('content', blogData.content.trim());
+            formData.append('author', blogData.author.trim());
+
+            // Append multiple media files
+            for (let i = 0; i < blogData.media.length; i++) {
+                formData.append('media', blogData.media[i]);
+            }
+
+            // Debug: Log FormData contents
+            console.log('FormData entries:');
+            for (let pair of formData.entries()) {
+                console.log('  ', pair[0], ':', pair[1]);
+            }
+
+            // IMPORTANT: Use raw axios instead of api instance to avoid default 'application/json' header
+            // This allows proper multipart/form-data with boundary
+            const response = await axios.post('https://fm-bls.onrender.com/api/blog/create', formData, {
+                withCredentials: true
+            });
+
+            console.log('Blog creation response:', response.data);
+
+            // Check if the response indicates success
+            if (response.data && response.data.success !== false) {
+                setBlogData({ title: '', content: '', author: '', media: [] });
+                // Clear file input
+                const fileInput = document.querySelector('input[type="file"][multiple]');
+                if (fileInput) fileInput.value = '';
+                showNotification('Blog Created Successfully!');
+
+                // Optionally refresh the page or redirect to blog page
+                setTimeout(() => {
+                    window.location.href = '/blog';
+                }, 1500);
+            } else {
+                showNotification(response.data?.message || 'Blog creation failed');
+            }
+        } catch (error) {
+            console.error('Error creating blog:', error);
+            console.error('Error response:', error.response?.data);
+            showNotification(error.response?.data?.message || 'Failed to create blog');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <div className="admin-wrapper">
             {notification && <div className="notification">{notification}</div>}
@@ -92,6 +164,12 @@ const Admin = () => {
                     >
                         Add Lesson
                     </button>
+                    <button
+                        className={`tab-btn ${activeTab === 'blog' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('blog')}
+                    >
+                        Create Blog
+                    </button>
                 </div>
             </div>
 
@@ -110,7 +188,7 @@ const Admin = () => {
                             <button type="submit" className="btn-submit">Create Course</button>
                         </form>
                     </div>
-                ) : (
+                ) : activeTab === 'lesson' ? (
                     <div className="form-card">
                         <h3>Add Lesson Content</h3>
                         <form onSubmit={handleLessonSubmit}>
@@ -168,6 +246,57 @@ const Admin = () => {
                                 required
                             />
                             <button type="submit" className="btn-submit">Add Lesson</button>
+                        </form>
+                    </div>
+                ) : (
+                    <div className="form-card">
+                        <h3>Create New Blog Post</h3>
+                        <form onSubmit={handleBlogSubmit}>
+                            <input
+                                type="text"
+                                placeholder="Blog Title"
+                                value={blogData.title}
+                                onChange={e => setBlogData({ ...blogData, title: e.target.value })}
+                                required
+                            />
+
+                            <input
+                                type="text"
+                                placeholder="Author Name"
+                                value={blogData.author}
+                                onChange={e => setBlogData({ ...blogData, author: e.target.value })}
+                                required
+                            />
+
+                            <textarea
+                                placeholder="Blog Content"
+                                value={blogData.content}
+                                onChange={e => setBlogData({ ...blogData, content: e.target.value })}
+                                rows="8"
+                                required
+                            />
+
+                            <div className="file-input-group">
+                                <label>Blog Media (up to 3 images/videos):</label>
+                                <input
+                                    type="file"
+                                    accept="image/*,video/*"
+                                    multiple
+                                    onChange={e => {
+                                        const files = Array.from(e.target.files).slice(0, 3);
+                                        setBlogData(prev => ({ ...prev, media: files }));
+                                    }}
+                                />
+                                {blogData.media.length > 0 && (
+                                    <small style={{ color: '#666', marginTop: '0.5rem' }}>
+                                        {blogData.media.length} file(s) selected
+                                    </small>
+                                )}
+                            </div>
+
+                            <button type="submit" className="btn-submit" disabled={isSubmitting}>
+                                {isSubmitting ? 'Creating...' : 'Create Blog Post'}
+                            </button>
                         </form>
                     </div>
                 )}
