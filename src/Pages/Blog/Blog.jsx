@@ -6,7 +6,7 @@ const Blog = () => {
     const [blogs, setBlogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedBlog, setSelectedBlog] = useState(null);
+    const [expandedBlogs, setExpandedBlogs] = useState({});
     const [searchQuery, setSearchQuery] = useState('');
 
     // Fetch blogs
@@ -17,12 +17,8 @@ const Blog = () => {
     const fetchBlogs = async () => {
         try {
             setLoading(true);
-            // Trying '/blog' first as per common convention given file naming
-            // If the user mounted it elsewhere, this might need adjustment
             const response = await api.get('/blog');
             if (response.data) {
-                // Adjust based on actual response structure. 
-                // Assuming response.data is the array or response.data.blogs
                 let blogData = Array.isArray(response.data) ? response.data :
                     (response.data.blogs || response.data.data || []);
                 // Sort by createdAt descending (newest first)
@@ -50,14 +46,11 @@ const Blog = () => {
             if (response.data) {
                 let blogData = Array.isArray(response.data) ? response.data :
                     (response.data.blogs || response.data.data || []);
-                // Sort by createdAt descending (newest first)
                 blogData = blogData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                 setBlogs(blogData);
             }
         } catch (err) {
             console.error("Error searching blogs:", err);
-            // Fallback to local filtering if API fails
-            // setBlogs(prev => prev.filter(b => b.title.toLowerCase().includes(searchQuery.toLowerCase())));
         } finally {
             setLoading(false);
         }
@@ -65,17 +58,39 @@ const Blog = () => {
 
     const formatDate = (dateString) => {
         if (!dateString) return '';
-        return new Date(dateString).toLocaleDateString('en-US', {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+
+        if (diffInHours < 1) return 'Just now';
+        if (diffInHours < 24) return `${diffInHours}h`;
+        if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d`;
+
+        return date.toLocaleDateString('en-US', {
             year: 'numeric',
-            month: 'long',
+            month: 'short',
             day: 'numeric'
         });
+    };
+
+    const toggleExpand = (blogId) => {
+        setExpandedBlogs(prev => ({
+            ...prev,
+            [blogId]: !prev[blogId]
+        }));
+    };
+
+    const shouldShowSeeMore = (content) => {
+        // Show "see more" if content exceeds ~3 lines (roughly 200 characters)
+        return content && content.length > 200;
     };
 
     if (loading && blogs.length === 0) {
         return (
             <div className="blog-container">
-                <div className="blog-loading">Loading specific insights...</div>
+                <div className="blog-loading">
+                    <div className="loading-spinner"></div>
+                </div>
             </div>
         );
     }
@@ -83,34 +98,24 @@ const Blog = () => {
     return (
         <div className="blog-container">
             <div className="blog-header">
-                <h1>Community Blog</h1>
-                <p>Latest updates, teachings, and stories.</p>
+                <h1>Community Feed</h1>
+                <p>Latest updates, teachings, and stories from our community.</p>
 
-                <form onSubmit={handleSearch} style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center', gap: '10px' }}>
-                    <input
-                        type="text"
-                        placeholder="Search blogs..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{
-                            padding: '10px 15px',
-                            borderRadius: '25px',
-                            border: '1px solid #ddd',
-                            width: '300px',
-                            fontSize: '1rem'
-                        }}
-                    />
-                    <button
-                        type="submit"
-                        style={{
-                            padding: '10px 25px',
-                            borderRadius: '25px',
-                            border: 'none',
-                            background: '#2c3e50',
-                            color: 'white',
-                            cursor: 'pointer'
-                        }}
-                    >
+                <form onSubmit={handleSearch} className="blog-search-form">
+                    <div className="search-input-wrapper">
+                        <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="M21 21l-4.35-4.35" />
+                        </svg>
+                        <input
+                            type="text"
+                            placeholder="Search posts..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="blog-search-input"
+                        />
+                    </div>
+                    <button type="submit" className="blog-search-btn">
                         Search
                     </button>
                 </form>
@@ -118,59 +123,73 @@ const Blog = () => {
 
             {error && <div className="blog-error">{error}</div>}
 
-            <div className="blog-grid">
-                {blogs.map((blog) => (
-                    <div key={blog._id} className="blog-card" onClick={() => setSelectedBlog(blog)}>
-                        {blog.media && blog.media.length > 0 && (
-                            <img
-                                src={blog.media[0]}
-                                alt={blog.title}
-                                className="blog-image"
-                                onError={(e) => { e.target.style.display = 'none' }}
-                            />
-                        )}
-                        <div className="blog-content">
-                            <h3 className="blog-title">{blog.title}</h3>
-                            <div className="blog-excerpt">
-                                {blog.content}
+            <div className="blog-feed">
+                {blogs.map((blog) => {
+                    const isExpanded = expandedBlogs[blog._id];
+                    const needsSeeMore = shouldShowSeeMore(blog.content);
+
+                    return (
+                        <article key={blog._id} className="blog-post">
+                            {/* Post Header */}
+                            <div className="post-header">
+                                <div className="author-avatar">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                    </svg>
+                                </div>
+                                <div className="post-info">
+                                    <span className="author-name">{blog.author || 'Admin'}</span>
+                                    <span className="post-time">{formatDate(blog.createdAt)}</span>
+                                </div>
                             </div>
-                            <div className="blog-meta">
-                                <span>{formatDate(blog.createdAt)}</span>
-                                <button className="read-more-btn">Read More</button>
+
+                            {/* Post Title */}
+                            <h2 className="post-title">{blog.title}</h2>
+
+                            {/* Post Content */}
+                            <div className={`post-content ${isExpanded ? 'expanded' : ''}`}>
+                                <p>{blog.content}</p>
                             </div>
-                        </div>
-                    </div>
-                ))}
+
+                            {needsSeeMore && !isExpanded && (
+                                <button
+                                    className="see-more-btn"
+                                    onClick={() => toggleExpand(blog._id)}
+                                >
+                                    ...see more
+                                </button>
+                            )}
+
+                            {isExpanded && (
+                                <button
+                                    className="see-more-btn"
+                                    onClick={() => toggleExpand(blog._id)}
+                                >
+                                    see less
+                                </button>
+                            )}
+
+                            {/* Post Media */}
+                            {blog.media && blog.media.length > 0 && (
+                                <div className="post-media">
+                                    <img
+                                        src={blog.media[0]}
+                                        alt={blog.title}
+                                        onError={(e) => { e.target.style.display = 'none' }}
+                                    />
+                                </div>
+                            )}
+                        </article>
+                    );
+                })}
             </div>
 
             {blogs.length === 0 && !loading && !error && (
-                <div style={{ textAlign: 'center', color: '#666', marginTop: '2rem' }}>
-                    No blogs found.
-                </div>
-            )}
-
-            {selectedBlog && (
-                <div className="blog-modal-overlay" onClick={() => setSelectedBlog(null)}>
-                    <div className="blog-modal" onClick={e => e.stopPropagation()}>
-                        <button className="close-modal" onClick={() => setSelectedBlog(null)}>&times;</button>
-
-                        {selectedBlog.media && selectedBlog.media.length > 0 && (
-                            <img
-                                src={selectedBlog.media[0]}
-                                alt={selectedBlog.title}
-                                className="blog-detail-image"
-                            />
-                        )}
-
-                        <div className="blog-detail-content">
-                            <h2 className="blog-detail-title">{selectedBlog.title}</h2>
-                            <span className="blog-detail-date">{formatDate(selectedBlog.createdAt)}</span>
-
-                            <div className="blog-detail-text">
-                                {selectedBlog.content}
-                            </div>
-                        </div>
-                    </div>
+                <div className="no-posts">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                    </svg>
+                    <p>No posts yet. Check back later!</p>
                 </div>
             )}
         </div>

@@ -13,6 +13,7 @@ const Quiz = () => {
     const [submitted, setSubmitted] = useState(false);
     const [score, setScore] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const fetchQuiz = async () => {
@@ -51,12 +52,14 @@ const Quiz = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!user?._id || !quiz) return;
+        if (!user?._id || !quiz || isSubmitting) return;
+        setIsSubmitting(true);
 
         // Validate that all questions are answered
         const unansweredQuestions = answers.some(a => a === '' || a === null || a === undefined);
         if (unansweredQuestions) {
             alert('Please answer all questions before submitting.');
+            setIsSubmitting(false);
             return;
         }
 
@@ -86,22 +89,22 @@ const Quiz = () => {
                 const correctCount = quiz.questions.reduce((count, question, index) => {
                     const userAnswer = answerArray[index];
                     // Try different possible field names for the correct answer
-                    const correctAnswer = question.correctAnswer !== undefined 
-                        ? question.correctAnswer 
-                        : (question.correctAnswerIndex !== undefined 
-                            ? question.correctAnswerIndex 
-                            : (question.answer !== undefined 
-                                ? question.answer 
-                                : (question.correct !== undefined 
-                                    ? question.correct 
+                    const correctAnswer = question.correctAnswer !== undefined
+                        ? question.correctAnswer
+                        : (question.correctAnswerIndex !== undefined
+                            ? question.correctAnswerIndex
+                            : (question.answer !== undefined
+                                ? question.answer
+                                : (question.correct !== undefined
+                                    ? question.correct
                                     : null)));
-                    
+
                     console.log(`Question ${index}: User answered ${userAnswer}, Correct answer is ${correctAnswer}`, question);
-                    
+
                     // Compare as numbers
                     const userAnswerNum = parseInt(userAnswer);
                     const correctAnswerNum = correctAnswer !== null ? parseInt(correctAnswer) : null;
-                    
+
                     if (correctAnswerNum !== null && userAnswerNum === correctAnswerNum) {
                         return count + 1;
                     }
@@ -116,7 +119,7 @@ const Quiz = () => {
             const response = await api.post(`/quiz/submit/${quiz._id}`, {
                 answers: answerArray
             });
-            
+
             // If backend returns 0 and we suspect format issue, log for debugging
             console.log('Answers sent as:', answerArray, 'Type:', answerArray.map(a => typeof a));
 
@@ -131,7 +134,7 @@ const Quiz = () => {
                 // Ensure score is a number, default to 0 if not provided
                 // Check multiple possible response formats
                 let calculatedScore = null;
-                
+
                 // Try to get score from various possible locations
                 if (typeof response.data.score === 'number') {
                     calculatedScore = response.data.score;
@@ -150,34 +153,34 @@ const Quiz = () => {
                     // Calculate from correct/total if provided
                     calculatedScore = Math.round((response.data.correct / response.data.total) * 100);
                 }
-                
+
                 console.log('Extracted score from backend:', calculatedScore);
-                
+
                 // Check if backend response includes correct answers or breakdown
                 if (response.data.correctAnswers !== undefined || response.data.results !== undefined) {
                     console.log('Backend provided answer breakdown:', response.data.correctAnswers || response.data.results);
                 }
-                
+
                 // Check if backend response includes questions with correct answers (for review)
                 if (response.data.questions && Array.isArray(response.data.questions)) {
                     console.log('Backend response includes questions with correct answers');
                     // Update quiz with correct answers from response if available
                     const updatedQuiz = { ...quiz, questions: response.data.questions };
                     setQuiz(updatedQuiz);
-                    
+
                     // Recalculate score using correct answers from response
                     const correctCount = response.data.questions.reduce((count, question, index) => {
                         const userAnswer = answerArray[index];
-                        const correctAnswer = question.correctAnswer !== undefined 
-                            ? question.correctAnswer 
+                        const correctAnswer = question.correctAnswer !== undefined
+                            ? question.correctAnswer
                             : (question.correctAnswerIndex !== undefined ? question.correctAnswerIndex : null);
-                        
+
                         if (correctAnswer !== null && parseInt(userAnswer) === parseInt(correctAnswer)) {
                             return count + 1;
                         }
                         return count;
                     }, 0);
-                    
+
                     if (correctCount > 0) {
                         const scoreFromQuestions = Math.round((correctCount / response.data.questions.length) * 100);
                         console.log('Recalculated score from backend questions:', scoreFromQuestions);
@@ -186,7 +189,7 @@ const Quiz = () => {
                         }
                     }
                 }
-                
+
                 // Try to calculate score from backend response if it includes question results
                 if (response.data.results && Array.isArray(response.data.results)) {
                     const correctFromResults = response.data.results.filter(r => r.correct === true || r.isCorrect === true).length;
@@ -198,7 +201,7 @@ const Quiz = () => {
                         }
                     }
                 }
-                
+
                 // If backend returned 0 or didn't return a score, and we have frontend calculation, use it
                 if ((calculatedScore === null || calculatedScore === undefined || isNaN(calculatedScore)) && frontendScore > 0) {
                     console.warn('Backend did not return a valid score, using frontend calculation');
@@ -207,19 +210,19 @@ const Quiz = () => {
                     console.warn('No valid score found, defaulting to 0');
                     calculatedScore = 0;
                 }
-                
+
                 // If backend returned 0 but frontend calculated a different score, use frontend
                 // This handles the case where backend calculation is wrong
                 if (calculatedScore === 0 && frontendScore > 0) {
                     console.warn(`Backend returned 0 but frontend calculated ${frontendScore}%. Using frontend score.`);
                     calculatedScore = frontendScore;
                 }
-                
+
                 console.log('Final calculated score:', calculatedScore); // Debug log
-                
+
                 setSubmitted(true);
                 setScore(calculatedScore);
-                
+
                 // Refresh user data to update XP
                 const userDataRes = await api.post('/auth/get-user-data');
                 if (userDataRes.data.success) {
@@ -240,7 +243,7 @@ const Quiz = () => {
         } catch (error) {
             console.error("Failed to submit quiz:", error);
             console.error("Error details:", error.response?.data);
-            
+
             // Calculate frontend score even on error
             if (quiz.questions && quiz.questions.length > 0) {
                 const answerArray = answers.map(a => parseInt(a)).filter(a => !isNaN(a));
@@ -256,12 +259,13 @@ const Quiz = () => {
             } else {
                 const errorMessage = error.response?.data?.message || error.message || 'Failed to submit quiz. Please try again.';
                 alert(errorMessage);
+                setIsSubmitting(false);
             }
         }
     };
 
     if (loading) {
-        return <div className="quiz-container"><div className="loading">Loading quiz...</div></div>;
+        return <div className="quiz-container"><div className="loading"><div className="loading-spinner"></div></div></div>;
     }
 
     if (!quiz) {
@@ -271,7 +275,7 @@ const Quiz = () => {
     if (submitted) {
         // Ensure score is a valid number, default to 0 if not
         const displayScore = typeof score === 'number' ? score : 0;
-        
+
         return (
             <div className="quiz-container">
                 <div className="quiz-result">
@@ -310,7 +314,9 @@ const Quiz = () => {
                         </div>
                     </div>
                 ))}
-                <button type="submit" className="btn-submit-quiz">Submit Quiz</button>
+                <button type="submit" className="btn-submit-quiz" disabled={isSubmitting}>
+                    {isSubmitting ? 'Submitting Quiz...' : 'Submit Quiz'}
+                </button>
             </form>
         </div>
     );

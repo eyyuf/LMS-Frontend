@@ -111,12 +111,14 @@
     box-shadow: 0 4px 15px rgba(107, 143, 113, 0.4);
 }
 
-.login-container button:disabled {
+.login-container button:disabled,
+.login-container button.btn-loading {
     background-color: #ccc;
     color: #666;
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+    pointer-events: none;
 }
 
 .error-message {

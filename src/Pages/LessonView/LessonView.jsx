@@ -77,7 +77,7 @@ const LessonView = () => {
     const nextLesson = currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null;
 
     if (loading) {
-        return <div className="lesson-view-container"><div className="loading">Loading...</div></div>;
+        return <div className="lesson-view-container"><div className="loading"><div className="loading-spinner"></div></div></div>;
     }
 
     if (!course || !lesson) {

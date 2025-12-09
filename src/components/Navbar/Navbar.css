@@ -34,6 +34,29 @@
     gap: 2rem;
 }
 
+/* User Streak Display */
+.user-streak {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    border-radius: 20px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+}
+
+.streak-icon {
+    font-size: 1.1rem;
+}
+
+.streak-value {
+    min-width: 16px;
+    text-align: center;
+}
+
 .nav-item {
     text-decoration: none;
     color: var(--text-light);

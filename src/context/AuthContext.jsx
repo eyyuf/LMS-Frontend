@@ -80,13 +80,15 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = async () => {
+        // Optimistic update: Clear local state immediately for snappy UI
+        setUser(null);
+        localStorage.removeItem('cozy_user');
+
         try {
             await api.post('/auth/logout');
         } catch (e) {
             console.error("Logout api failed", e);
         }
-        setUser(null);
-        localStorage.removeItem('cozy_user');
     };
 
     const sendVerificationOTP = async (userId) => {
@@ -130,19 +132,23 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const getUserData = async (userId) => {
+    const refreshUser = async () => {
         try {
-            // Backend auth middleware sets req.body.userId from token cookie
             const response = await api.post('/auth/get-user-data');
             if (response.data.success) {
-                setUser(response.data.User);
-                return { success: true, user: response.data.User };
+                const userData = response.data.User;
+                setUser(userData);
+                localStorage.setItem('cozy_user', JSON.stringify(userData));
+                return { success: true, user: userData };
             }
             return { success: false, message: response.data.message };
         } catch (error) {
             return { success: false, message: error.response?.data?.message || 'Failed to fetch user data' };
         }
     };
+
+    // Alias for backward compatibility
+    const getUserData = refreshUser;
 
     const updateProfile = async (userId, name, avater) => {
         try {
@@ -158,17 +164,18 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ 
-            user, 
-            login, 
-            signup, 
-            logout, 
+        <AuthContext.Provider value={{
+            user,
+            login,
+            signup,
+            logout,
             loading,
             sendVerificationOTP,
             verifyOTP,
             sendResetPasswordOTP,
             resetPassword,
             getUserData,
+            refreshUser,
             updateProfile
         }}>
             {children}

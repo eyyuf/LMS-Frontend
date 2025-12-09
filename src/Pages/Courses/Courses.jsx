@@ -19,7 +19,7 @@ const Courses = () => {
     };
 
     if (loading) {
-        return <div className="courses-page"><div className="loading">Loading courses...</div></div>;
+        return <div className="courses-page"><div className="loading"><div className="loading-spinner"></div></div></div>;
     }
 
     return (

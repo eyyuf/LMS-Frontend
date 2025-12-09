@@ -54,7 +54,7 @@ const Home = () => {
                 </div>
 
                 {loading ? (
-                    <div className="loading">Loading courses...</div>
+                    <div className="loading"><div className="loading-spinner"></div></div>
                 ) : (
                     <>
                         <div className="features-grid">

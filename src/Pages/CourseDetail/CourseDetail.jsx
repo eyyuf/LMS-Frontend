@@ -63,7 +63,7 @@ const CourseDetail = () => {
     };
 
     if (loading) {
-        return <div className="detail-container"><div className="loading">Loading...</div></div>;
+        return <div className="detail-container"><div className="loading"><div className="loading-spinner"></div></div></div>;
     }
 
     if (!course) {
