@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCourses } from '../../context/CourseContext';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/api';
@@ -27,6 +27,35 @@ const Admin = () => {
         author: '',
         media: []
     });
+
+    // Blogs List for Management
+    const [blogs, setBlogs] = useState([]);
+    const [editingBlog, setEditingBlog] = useState(null);
+
+    // Quiz Form State
+    const [quizData, setQuizData] = useState({
+        courseId: '',
+        questions: [{ question: '', options: ['', '', '', ''], correctAnswer: 0 }]
+    });
+
+    // Fetch blogs for management
+    useEffect(() => {
+        if (activeTab === 'manageBlogs') {
+            fetchBlogs();
+        }
+    }, [activeTab]);
+
+    const fetchBlogs = async () => {
+        try {
+            const response = await api.get('/blog');
+            if (response.data) {
+                const blogData = response.data.blogs || response.data.data || response.data || [];
+                setBlogs(Array.isArray(blogData) ? blogData : []);
+            }
+        } catch (error) {
+            console.error('Error fetching blogs:', error);
+        }
+    };
 
     if (!user || user.role !== 'ADMIN') {
         return <div className="admin-wrapper"><h2>Access Denied. Admin only.</h2></div>;
@@ -145,6 +174,131 @@ const Admin = () => {
         }
     };
 
+    // Update Blog Handler
+    const handleUpdateBlog = async (e) => {
+        e.preventDefault();
+        if (!editingBlog) return;
+
+        setIsSubmitting(true);
+        try {
+            const response = await api.put(`/blog/${editingBlog._id}`, {
+                title: editingBlog.title,
+                content: editingBlog.content,
+                author: editingBlog.author
+            });
+
+            if (response.data?.success !== false) {
+                showNotification('Blog Updated Successfully!');
+                setEditingBlog(null);
+                fetchBlogs();
+            } else {
+                showNotification(response.data?.message || 'Update failed');
+            }
+        } catch (error) {
+            showNotification(error.response?.data?.message || 'Failed to update blog');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // Delete Blog Handler
+    const handleDeleteBlog = async (blogId) => {
+        if (!window.confirm('Are you sure you want to delete this blog?')) return;
+
+        try {
+            const response = await api.delete(`/blog/${blogId}`);
+            if (response.data?.success !== false) {
+                showNotification('Blog Deleted Successfully!');
+                fetchBlogs();
+            } else {
+                showNotification(response.data?.message || 'Delete failed');
+            }
+        } catch (error) {
+            showNotification(error.response?.data?.message || 'Failed to delete blog');
+        }
+    };
+
+    // Quiz Handlers
+    const addQuestion = () => {
+        setQuizData(prev => ({
+            ...prev,
+            questions: [...prev.questions, { question: '', options: ['', '', '', ''], correctAnswer: 0 }]
+        }));
+    };
+
+    const removeQuestion = (index) => {
+        if (quizData.questions.length <= 1) return;
+        setQuizData(prev => ({
+            ...prev,
+            questions: prev.questions.filter((_, i) => i !== index)
+        }));
+    };
+
+    const updateQuestion = (index, field, value) => {
+        setQuizData(prev => ({
+            ...prev,
+            questions: prev.questions.map((q, i) =>
+                i === index ? { ...q, [field]: value } : q
+            )
+        }));
+    };
+
+    const updateOption = (qIndex, oIndex, value) => {
+        setQuizData(prev => ({
+            ...prev,
+            questions: prev.questions.map((q, i) =>
+                i === qIndex ? {
+                    ...q,
+                    options: q.options.map((opt, j) => j === oIndex ? value : opt)
+                } : q
+            )
+        }));
+    };
+
+    const handleQuizSubmit = async (e) => {
+        e.preventDefault();
+        if (!quizData.courseId) {
+            showNotification('Please select a course');
+            return;
+        }
+
+        // Validate questions
+        for (let i = 0; i < quizData.questions.length; i++) {
+            const q = quizData.questions[i];
+            if (!q.question.trim()) {
+                showNotification(`Question ${i + 1} is empty`);
+                return;
+            }
+            for (let j = 0; j < q.options.length; j++) {
+                if (!q.options[j].trim()) {
+                    showNotification(`Option ${j + 1} in Question ${i + 1} is empty`);
+                    return;
+                }
+            }
+        }
+
+        setIsSubmitting(true);
+        try {
+            const response = await api.post(`/quiz/create/${quizData.courseId}`, {
+                questions: quizData.questions
+            });
+
+            if (response.data?.success) {
+                showNotification('Quiz Created Successfully!');
+                setQuizData({
+                    courseId: '',
+                    questions: [{ question: '', options: ['', '', '', ''], correctAnswer: 0 }]
+                });
+            } else {
+                showNotification(response.data?.message || 'Failed to create quiz');
+            }
+        } catch (error) {
+            showNotification(error.response?.data?.message || 'Failed to create quiz');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <div className="admin-wrapper">
             {notification && <div className="notification">{notification}</div>}
@@ -165,10 +319,22 @@ const Admin = () => {
                         Add Lesson
                     </button>
                     <button
+                        className={`tab-btn ${activeTab === 'quiz' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('quiz')}
+                    >
+                        Create Quiz
+                    </button>
+                    <button
                         className={`tab-btn ${activeTab === 'blog' ? 'active' : ''}`}
                         onClick={() => setActiveTab('blog')}
                     >
                         Create Blog
+                    </button>
+                    <button
+                        className={`tab-btn ${activeTab === 'manageBlogs' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('manageBlogs')}
+                    >
+                        Manage Blogs
                     </button>
                 </div>
             </div>
@@ -248,7 +414,91 @@ const Admin = () => {
                             <button type="submit" className="btn-submit">Add Lesson</button>
                         </form>
                     </div>
-                ) : (
+                ) : activeTab === 'quiz' ? (
+                    <div className="form-card">
+                        <h3>Create Quiz for Course</h3>
+                        <form onSubmit={handleQuizSubmit}>
+                            <select
+                                value={quizData.courseId}
+                                onChange={e => setQuizData({ ...quizData, courseId: e.target.value })}
+                                required
+                            >
+                                <option value="">Select a Course...</option>
+                                {courses.map(c => (
+                                    <option key={c._id} value={c._id}>{c.title}</option>
+                                ))}
+                            </select>
+
+                            <div className="quiz-questions">
+                                {quizData.questions.map((q, qIndex) => (
+                                    <div key={qIndex} className="question-block" style={{
+                                        padding: '1rem',
+                                        marginBottom: '1rem',
+                                        background: '#f9f9f9',
+                                        borderRadius: '8px',
+                                        border: '1px solid #eee'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                            <strong>Question {qIndex + 1}</strong>
+                                            {quizData.questions.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeQuestion(qIndex)}
+                                                    style={{ background: '#ffcdd2', color: '#c62828', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer' }}
+                                                >
+                                                    Remove
+                                                </button>
+                                            )}
+                                        </div>
+                                        <input
+                                            type="text"
+                                            placeholder="Enter question"
+                                            value={q.question}
+                                            onChange={e => updateQuestion(qIndex, 'question', e.target.value)}
+                                            style={{ marginBottom: '0.5rem' }}
+                                            required
+                                        />
+                                        <div style={{ display: 'grid', gap: '0.5rem' }}>
+                                            {q.options.map((opt, oIndex) => (
+                                                <div key={oIndex} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                    <input
+                                                        type="radio"
+                                                        name={`correct-${qIndex}`}
+                                                        checked={q.correctAnswer === oIndex}
+                                                        onChange={() => updateQuestion(qIndex, 'correctAnswer', oIndex)}
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        placeholder={`Option ${oIndex + 1}`}
+                                                        value={opt}
+                                                        onChange={e => updateOption(qIndex, oIndex, e.target.value)}
+                                                        style={{ flex: 1 }}
+                                                        required
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <small style={{ color: '#666', marginTop: '0.5rem', display: 'block' }}>
+                                            Select the correct answer using the radio button
+                                        </small>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={addQuestion}
+                                style={{ background: '#e3f2fd', color: '#1976d2', border: 'none', padding: '0.8rem', borderRadius: '8px', cursor: 'pointer', marginBottom: '1rem', width: '100%' }}
+                            >
+                                + Add Another Question
+                            </button>
+
+                            <button type="submit" className="btn-submit" disabled={isSubmitting}>
+                                {isSubmitting ? 'Creating Quiz...' : 'Create Quiz'}
+                            </button>
+                        </form>
+                    </div>
+                ) : activeTab === 'blog' ? (
                     <div className="form-card">
                         <h3>Create New Blog Post</h3>
                         <form onSubmit={handleBlogSubmit}>
@@ -299,7 +549,80 @@ const Admin = () => {
                             </button>
                         </form>
                     </div>
-                )}
+                ) : activeTab === 'manageBlogs' ? (
+                    <div className="form-card" style={{ maxWidth: '100%' }}>
+                        <h3>Manage Blogs</h3>
+
+                        {editingBlog ? (
+                            <form onSubmit={handleUpdateBlog}>
+                                <h4>Editing: {editingBlog.title}</h4>
+                                <input
+                                    type="text"
+                                    placeholder="Blog Title"
+                                    value={editingBlog.title}
+                                    onChange={e => setEditingBlog({ ...editingBlog, title: e.target.value })}
+                                    required
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Author"
+                                    value={editingBlog.author || ''}
+                                    onChange={e => setEditingBlog({ ...editingBlog, author: e.target.value })}
+                                    required
+                                />
+                                <textarea
+                                    placeholder="Content"
+                                    value={editingBlog.content}
+                                    onChange={e => setEditingBlog({ ...editingBlog, content: e.target.value })}
+                                    rows="6"
+                                    required
+                                />
+                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                    <button type="submit" className="btn-submit" disabled={isSubmitting}>
+                                        {isSubmitting ? 'Updating...' : 'Update Blog'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingBlog(null)}
+                                        style={{ background: '#eee', border: 'none', padding: '1rem', borderRadius: '8px', cursor: 'pointer' }}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        ) : (
+                            <div className="admin-course-list">
+                                {blogs.length === 0 ? (
+                                    <p>No blogs yet.</p>
+                                ) : (
+                                    blogs.map(blog => (
+                                        <div key={blog._id} className="admin-course-item">
+                                            <div className="course-info-summary">
+                                                <strong>{blog.title}</strong>
+                                                <span>{blog.author || 'Unknown'} • {new Date(blog.createdAt).toLocaleDateString()}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <button
+                                                    className="btn-delete-sm"
+                                                    style={{ background: '#e3f2fd', color: '#1976d2' }}
+                                                    onClick={() => setEditingBlog(blog)}
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    className="btn-delete-sm"
+                                                    onClick={() => handleDeleteBlog(blog._id)}
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </div>
+                ) : null}
 
                 <div className="admin-list-section">
                     <h3>Manage Courses</h3>
