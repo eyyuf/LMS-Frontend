@@ -136,7 +136,11 @@ const Admin = () => {
                 formData.append('media', blogData.media[i]);
             }
 
-
+            // Debug: Log FormData contents
+            console.log('FormData entries:');
+            for (let pair of formData.entries()) {
+                console.log('  ', pair[0], ':', pair[1]);
+            }
 
             // IMPORTANT: Use raw axios instead of api instance to avoid default 'application/json' header
             // This allows proper multipart/form-data with boundary
@@ -144,7 +148,7 @@ const Admin = () => {
                 withCredentials: true
             });
 
-
+            console.log('Blog creation response:', response.data);
 
             // Check if the response indicates success
             if (response.data && response.data.success !== false) {
@@ -162,8 +166,8 @@ const Admin = () => {
                 showNotification(response.data?.message || 'Blog creation failed');
             }
         } catch (error) {
-            // console.error('Error creating blog:', error);
-            // console.error('Error response:', error.response?.data);
+            console.error('Error creating blog:', error);
+            console.error('Error response:', error.response?.data);
             showNotification(error.response?.data?.message || 'Failed to create blog');
         } finally {
             setIsSubmitting(false);

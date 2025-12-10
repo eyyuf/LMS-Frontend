@@ -5,7 +5,7 @@ import './VerifyAccount.css';
 
 const VerifyAccount = () => {
     const navigate = useNavigate();
-    const { verifyOTP, sendVerificationOTP, user } = useAuth();
+    const { verifyOTP, sendVerificationOTP, logout, user } = useAuth();
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
@@ -165,6 +165,21 @@ const VerifyAccount = () => {
                         disabled={resendTimer > 0 || isLoading}
                     >
                         {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend Code'}
+                    </button>
+                </div>
+
+                <div className="verify-footer" style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+                    {user?.email && (
+                        <p style={{ fontSize: '13px', color: '#777', marginBottom: '10px' }}>
+                            Verifying email: <strong>{user.email}</strong>
+                        </p>
+                    )}
+                    <button
+                        onClick={() => logout()}
+                        className="btn-logout-verify"
+                        style={{ background: 'none', border: 'none', color: '#ff4444', cursor: 'pointer', textDecoration: 'underline', fontSize: '14px' }}
+                    >
+                        Logout / Switch Account
                     </button>
                 </div>
             </div>

@@ -20,7 +20,7 @@ const Leaderboard = () => {
                 // Backend route is GET - auth middleware sets req.body.userId from token cookie
                 const response = await api.get('/leaderboard/getLeaderboard');
                 if (response.data.success) {
-                    setLeaderboard(response.data.leaderboard || []);
+                    setLeaderboard((response.data.leaderboard || []).slice(0, 10));
                 } else {
                     console.error("Failed to fetch leaderboard:", response.data.message);
                     setLeaderboard([]);
@@ -45,7 +45,7 @@ const Leaderboard = () => {
                     const response = await api.get('/family/famLeaderboard');
                     if (response.data.success) {
                         const sorted = (response.data.families || []).sort((a, b) => (b.xp || 0) - (a.xp || 0));
-                        setFamilyLeaderboard(sorted);
+                        setFamilyLeaderboard(sorted.slice(0, 5));
                     } else {
                         console.error("Failed to fetch family leaderboard:", response.data.message);
                         setFamilyLeaderboard([]);

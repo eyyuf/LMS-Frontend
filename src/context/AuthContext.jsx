@@ -14,9 +14,11 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const checkAuth = async () => {
             try {
+                // Try initial auth check
                 const response = await api.post('/auth/is-auth');
+
                 if (response.data.success && user?._id) {
-                    // Fetch full user data - backend auth middleware sets req.body.userId from token cookie
+                    // Already loaded? Refresh data
                     const userDataRes = await api.post('/auth/get-user-data');
                     if (userDataRes.data.success) {
                         setUser(userDataRes.data.User);
@@ -25,21 +27,47 @@ export const AuthProvider = ({ children }) => {
                         }
                     }
                 } else if (response.data.message === "Please verify your account") {
+                    // Check returned this specific warning, so load user anyway
                     setNeedsVerification(true);
+
+                    // Try to fetch user data for the Verify page (requires backend to allow this route)
+                    try {
+                        const userDataRes = await api.post('/auth/get-user-data');
+                        if (userDataRes.data.success) {
+                            setUser(userDataRes.data.User);
+                        }
+                    } catch (err) {
+                        console.warn('Could not fetch user data for unverified account', err);
+                    }
+                } else {
+                    // Check local storage fallback
+                    const storedUser = localStorage.getItem('cozy_user');
+                    if (storedUser) {
+                        const parsed = JSON.parse(storedUser);
+                        setUser(parsed);
+                        // Verification check locally
+                        if (parsed && !parsed.IsAccVerified) {
+                            setNeedsVerification(true);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Auth check failed:", error);
+
+                if (error.response?.data?.message === "Please verify your account") {
+                    setNeedsVerification(true);
+                    // Try to fetch user data just in case backend allows it
+                    try {
+                        const userDataRes = await api.post('/auth/get-user-data');
+                        if (userDataRes.data.success) {
+                            setUser(userDataRes.data.User);
+                        }
+                    } catch (err) { }
                 } else {
                     const storedUser = localStorage.getItem('cozy_user');
                     if (storedUser) {
                         setUser(JSON.parse(storedUser));
                     }
-                }
-            } catch (error) {
-                console.error("Auth check failed:", error);
-                if (error.response?.data?.message === "Please verify your account") {
-                    setNeedsVerification(true);
-                }
-                const storedUser = localStorage.getItem('cozy_user');
-                if (storedUser) {
-                    setUser(JSON.parse(storedUser));
                 }
             } finally {
                 setLoading(false);
@@ -137,36 +165,23 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const sendVerificationOTP = async (email) => {
+    const sendVerificationOTP = async (userId) => {
         try {
-            // If email is provided, send it in body. Otherwise backend relies on cookie/userId
-            const payload = email ? { email } : {};
-            const response = await api.post('/auth/send-verification-otp', payload);
+            // Backend auth middleware sets req.body.userId from token cookie
+            const response = await api.post('/auth/send-verification-otp');
             return { success: response.data.success, message: response.data.message };
         } catch (error) {
             return { success: false, message: error.response?.data?.message || 'Failed to send OTP' };
         }
     };
 
-    const verifyOTP = async (userId, otp, email) => {
+    const verifyOTP = async (userId, otp) => {
         try {
-            const payload = { otp };
-            if (email) payload.email = email;
-
-            const response = await api.post('/auth/verify-otp', payload);
-
-            // If verification successful and we have a user in context matching (or just general update)
-            if (response.data.success) {
-                // If we were verifying the current user context
-                if (user?._id) {
-                    setUser(prev => ({ ...prev, IsAccVerified: true }));
-                    setNeedsVerification(false);
-                }
-
-                // Always try to refresh user data if possible, in case we just got a token or cookie updated
-                if (!user) {
-                    await refreshUser();
-                }
+            // Backend auth middleware sets req.body.userId from token cookie
+            const response = await api.post('/auth/verify-otp', { otp });
+            if (response.data.success && user?._id === userId) {
+                setUser(prev => ({ ...prev, IsAccVerified: true }));
+                setNeedsVerification(false);
             }
             return { success: response.data.success, message: response.data.message };
         } catch (error) {
