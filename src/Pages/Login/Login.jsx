@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { GoogleLogin } from '@react-oauth/google';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './Login.css';
@@ -52,6 +53,38 @@ const Login = () => {
                 {error && <div className="error-message">{error}</div>}
 
                 <form onSubmit={handleLogin}>
+                    <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+                        <GoogleLogin
+                            onSuccess={async (credentialResponse) => {
+                                try {
+                                    setIsLoading(true);
+                                    // Pass tokens as 'token' expecting backend logic `req.body`
+                                    const result = await login({ googleToken: credentialResponse.credential });
+                                    if (result.success) {
+                                        navigate('/profile');
+                                    } else {
+                                        setError(result.message || 'Google Sign-In failed.');
+                                    }
+                                } catch (err) {
+                                    console.error("Google Login Error:", err);
+                                    setError('Google Sign-In error.');
+                                } finally {
+                                    setIsLoading(false);
+                                }
+                            }}
+                            onError={() => {
+                                setError('Google Sign-In failed.');
+                            }}
+                            useOneTap
+                            theme="filled_blue"
+                            shape="pill"
+                            text="signin_with"
+                        />
+                    </div>
+
+                    <div className="divider" style={{ textAlign: 'center', margin: '0 0 1.5rem 0', color: '#666', fontSize: '0.9rem' }}>
+                        <span>OR</span>
+                    </div>
                     <div className="input-group">
                         <input
                             type="email"

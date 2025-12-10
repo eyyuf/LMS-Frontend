@@ -23,22 +23,17 @@ export const AuthProvider = ({ children }) => {
                     if (userDataRes.data.success) {
                         setUser(userDataRes.data.User);
                         if (!userDataRes.data.User.IsAccVerified) {
-                            setNeedsVerification(true);
+                            // Non-persistent verification:
+                            // If user is not verified and we are running checkAuth (reload/reopen), logout.
+                            // Only a fresh successful login prevents this.
+                            await logout();
+                            return;
                         }
                     }
                 } else if (response.data.message === "Please verify your account") {
-                    // Check returned this specific warning, so load user anyway
-                    setNeedsVerification(true);
-
-                    // Try to fetch user data for the Verify page (requires backend to allow this route)
-                    try {
-                        const userDataRes = await api.post('/auth/get-user-data');
-                        if (userDataRes.data.success) {
-                            setUser(userDataRes.data.User);
-                        }
-                    } catch (err) {
-                        console.warn('Could not fetch user data for unverified account', err);
-                    }
+                    // Strict check: Logout if unverified to prevent persistence
+                    await logout();
+                    return;
                 } else {
                     // Check local storage fallback
                     const storedUser = localStorage.getItem('cozy_user');
@@ -47,7 +42,8 @@ export const AuthProvider = ({ children }) => {
                         setUser(parsed);
                         // Verification check locally
                         if (parsed && !parsed.IsAccVerified) {
-                            setNeedsVerification(true);
+                            await logout();
+                            return;
                         }
                     }
                 }
@@ -55,14 +51,8 @@ export const AuthProvider = ({ children }) => {
                 console.error("Auth check failed:", error);
 
                 if (error.response?.data?.message === "Please verify your account") {
-                    setNeedsVerification(true);
-                    // Try to fetch user data just in case backend allows it
-                    try {
-                        const userDataRes = await api.post('/auth/get-user-data');
-                        if (userDataRes.data.success) {
-                            setUser(userDataRes.data.User);
-                        }
-                    } catch (err) { }
+                    await logout();
+                    return;
                 } else {
                     const storedUser = localStorage.getItem('cozy_user');
                     if (storedUser) {
@@ -78,7 +68,12 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (credentials) => {
         try {
-            const response = await api.post('/auth/login', credentials);
+            let response;
+            if (credentials.googleToken) {
+                response = await api.post('/auth/google-auth', { token: credentials.googleToken });
+            } else {
+                response = await api.post('/auth/login', credentials);
+            }
 
             if (response.data.success) {
                 const { user: userData } = response.data;

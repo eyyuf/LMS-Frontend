@@ -37,6 +37,16 @@ const VerifyAccount = () => {
         return () => clearInterval(interval);
     }, [resendTimer]);
 
+    // Inactivity Timeout: Logout after 10 minutes if not verified
+    useEffect(() => {
+        const timeout = setTimeout(async () => {
+            alert("Verification session expired. Please log in again.");
+            await logout();
+        }, 3 * 60 * 1000); // 3 minutes
+
+        return () => clearTimeout(timeout);
+    }, [logout]);
+
     const handleChange = (index, value) => {
         // Allow only numbers
         if (isNaN(value)) return;
