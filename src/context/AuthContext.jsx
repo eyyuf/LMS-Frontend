@@ -8,6 +8,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [needsVerification, setNeedsVerification] = useState(false);
 
     // Check authentication on mount
     useEffect(() => {
@@ -19,7 +20,12 @@ export const AuthProvider = ({ children }) => {
                     const userDataRes = await api.post('/auth/get-user-data');
                     if (userDataRes.data.success) {
                         setUser(userDataRes.data.User);
+                        if (!userDataRes.data.User.IsAccVerified) {
+                            setNeedsVerification(true);
+                        }
                     }
+                } else if (response.data.message === "Please verify your account") {
+                    setNeedsVerification(true);
                 } else {
                     const storedUser = localStorage.getItem('cozy_user');
                     if (storedUser) {
@@ -28,6 +34,9 @@ export const AuthProvider = ({ children }) => {
                 }
             } catch (error) {
                 console.error("Auth check failed:", error);
+                if (error.response?.data?.message === "Please verify your account") {
+                    setNeedsVerification(true);
+                }
                 const storedUser = localStorage.getItem('cozy_user');
                 if (storedUser) {
                     setUser(JSON.parse(storedUser));
@@ -47,15 +56,45 @@ export const AuthProvider = ({ children }) => {
                 const { user: userData } = response.data;
                 setUser(userData);
                 localStorage.setItem('cozy_user', JSON.stringify(userData));
+
+                if (!userData.IsAccVerified) {
+                    setNeedsVerification(true);
+                }
+
                 return { success: true };
             } else {
                 return { success: false, message: response.data.message };
             }
         } catch (error) {
             console.error("Login failed:", error);
+            if (error.response?.data?.message === "Please verify your account") {
+                setNeedsVerification(true);
+                // We might still want to return success:false to stop login flow, but the UI should redirect
+                return { success: false, message: "Please verify your account" };
+            }
             return { success: false, message: error.response?.data?.message || 'Login failed. Please check your connection or credentials.' };
         }
     };
+
+
+
+    const refreshUser = async () => {
+        try {
+            const response = await api.post('/auth/get-user-data');
+            if (response.data.success) {
+                const userData = response.data.User;
+                setUser(userData);
+                localStorage.setItem('cozy_user', JSON.stringify(userData));
+                return { success: true, user: userData };
+            }
+            return { success: false, message: response.data.message };
+        } catch (error) {
+            return { success: false, message: error.response?.data?.message || 'Failed to fetch user data' };
+        }
+    };
+
+    // Alias for backward compatibility
+    const getUserData = refreshUser;
 
     const signup = async (userData) => {
         try {
@@ -69,6 +108,13 @@ export const AuthProvider = ({ children }) => {
             const response = await api.post('/auth/register', payload);
 
             if (response.data.success) {
+                // Fetch user data to populate state immediately
+                const userResult = await refreshUser();
+                if (userResult.success && userResult.user) {
+                    if (!userResult.user.IsAccVerified) {
+                        setNeedsVerification(true);
+                    }
+                }
                 return { success: true };
             } else {
                 return { success: false, message: response.data.message };
@@ -91,22 +137,36 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const sendVerificationOTP = async (userId) => {
+    const sendVerificationOTP = async (email) => {
         try {
-            // Backend auth middleware sets req.body.userId from token cookie
-            const response = await api.post('/auth/send-verification-otp');
+            // If email is provided, send it in body. Otherwise backend relies on cookie/userId
+            const payload = email ? { email } : {};
+            const response = await api.post('/auth/send-verification-otp', payload);
             return { success: response.data.success, message: response.data.message };
         } catch (error) {
             return { success: false, message: error.response?.data?.message || 'Failed to send OTP' };
         }
     };
 
-    const verifyOTP = async (userId, otp) => {
+    const verifyOTP = async (userId, otp, email) => {
         try {
-            // Backend auth middleware sets req.body.userId from token cookie
-            const response = await api.post('/auth/verify-otp', { otp });
-            if (response.data.success && user?._id === userId) {
-                setUser(prev => ({ ...prev, IsAccVerified: true }));
+            const payload = { otp };
+            if (email) payload.email = email;
+
+            const response = await api.post('/auth/verify-otp', payload);
+
+            // If verification successful and we have a user in context matching (or just general update)
+            if (response.data.success) {
+                // If we were verifying the current user context
+                if (user?._id) {
+                    setUser(prev => ({ ...prev, IsAccVerified: true }));
+                    setNeedsVerification(false);
+                }
+
+                // Always try to refresh user data if possible, in case we just got a token or cookie updated
+                if (!user) {
+                    await refreshUser();
+                }
             }
             return { success: response.data.success, message: response.data.message };
         } catch (error) {
@@ -132,23 +192,7 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const refreshUser = async () => {
-        try {
-            const response = await api.post('/auth/get-user-data');
-            if (response.data.success) {
-                const userData = response.data.User;
-                setUser(userData);
-                localStorage.setItem('cozy_user', JSON.stringify(userData));
-                return { success: true, user: userData };
-            }
-            return { success: false, message: response.data.message };
-        } catch (error) {
-            return { success: false, message: error.response?.data?.message || 'Failed to fetch user data' };
-        }
-    };
 
-    // Alias for backward compatibility
-    const getUserData = refreshUser;
 
     const updateProfile = async (userId, name, avater) => {
         try {
@@ -176,7 +220,10 @@ export const AuthProvider = ({ children }) => {
             resetPassword,
             getUserData,
             refreshUser,
-            updateProfile
+            getUserData,
+            refreshUser,
+            updateProfile,
+            needsVerification
         }}>
             {children}
         </AuthContext.Provider>

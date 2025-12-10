@@ -49,7 +49,20 @@ const Login = () => {
                 <h2>Welcome Back</h2>
                 <p className="login-subtitle">Please sign in to continue your learning journey.</p>
 
-                {error && <div className="error-message">{error}</div>}
+                {error && (
+                    <div className="error-message">
+                        {error}
+                        {(error === 'Please verify your account' || error.includes('verify')) && (
+                            <button
+                                type="button"
+                                className="btn-verify-redirect"
+                                onClick={() => navigate('/verify-account', { state: { email: formData.email } })}
+                            >
+                                Verify Account
+                            </button>
+                        )}
+                    </div>
+                )}
 
                 <form onSubmit={handleLogin}>
                     <div className="input-group">

@@ -7,7 +7,7 @@ const CourseContext = createContext();
 export const useCourses = () => useContext(CourseContext);
 
 export const CourseProvider = ({ children }) => {
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
     const [courses, setCourses] = useState([]);
     const [enrolledCourses, setEnrolledCourses] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -178,12 +178,14 @@ export const CourseProvider = ({ children }) => {
             const response = await api.post(`/lessons/completeLesson/${lessonId}`);
             if (response.data.success) {
                 setCompletedLessons(prev => [...prev, lessonId.toString()]);
-                // Update user data to refresh XP and streak
-                const userDataRes = await api.post('/auth/get-user-data');
-                if (userDataRes.data.success) {
-                    // Update badge/league
-                    await api.post('/user/updateBadge');
-                }
+                setCompletedLessons(prev => [...prev, lessonId.toString()]);
+                // Update user data to refresh XP and streak globally
+                await refreshUser();
+
+                // Update badge/league separately if needed, or rely on refreshUser if it handles it? 
+                // refreshUser just gets user data. updateBadge is an action.
+                await api.post('/user/updateBadge');
+
                 return { success: true };
             }
             return { success: false, message: response.data.message };

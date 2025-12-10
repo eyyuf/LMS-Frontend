@@ -6,7 +6,7 @@ import './Quiz.css';
 
 const Quiz = () => {
     const { courseId } = useParams();
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
     const navigate = useNavigate();
     const [quiz, setQuiz] = useState(null);
     const [answers, setAnswers] = useState([]);
@@ -74,13 +74,7 @@ const Quiz = () => {
             });
 
             // Debug: Log what we're sending
-            console.log('Submitting answers:', answerArray);
-            console.log('Quiz questions:', quiz.questions);
-            console.log('Full quiz object:', quiz);
-            console.log('First question structure:', quiz.questions?.[0]);
-            console.log('Quiz correct answers (if available):', quiz.questions?.map(q => q.correctAnswer));
-            console.log('Checking for correctAnswerIndex:', quiz.questions?.map(q => q.correctAnswerIndex));
-            console.log('Checking for answer:', quiz.questions?.map(q => q.answer));
+
 
             // Calculate score on frontend as fallback
             // Try multiple possible field names for correct answer
@@ -99,7 +93,7 @@ const Quiz = () => {
                                     ? question.correct
                                     : null)));
 
-                    console.log(`Question ${index}: User answered ${userAnswer}, Correct answer is ${correctAnswer}`, question);
+
 
                     // Compare as numbers
                     const userAnswerNum = parseInt(userAnswer);
@@ -111,7 +105,7 @@ const Quiz = () => {
                     return count;
                 }, 0);
                 frontendScore = Math.round((correctCount / quiz.questions.length) * 100);
-                console.log('Frontend calculated score:', frontendScore, `(${correctCount}/${quiz.questions.length} correct)`);
+
             }
 
             // Backend auth middleware sets req.body.userId from token cookie
@@ -154,7 +148,7 @@ const Quiz = () => {
                     calculatedScore = Math.round((response.data.correct / response.data.total) * 100);
                 }
 
-                console.log('Extracted score from backend:', calculatedScore);
+
 
                 // Check if backend response includes correct answers or breakdown
                 if (response.data.correctAnswers !== undefined || response.data.results !== undefined) {
@@ -163,7 +157,7 @@ const Quiz = () => {
 
                 // Check if backend response includes questions with correct answers (for review)
                 if (response.data.questions && Array.isArray(response.data.questions)) {
-                    console.log('Backend response includes questions with correct answers');
+
                     // Update quiz with correct answers from response if available
                     const updatedQuiz = { ...quiz, questions: response.data.questions };
                     setQuiz(updatedQuiz);
@@ -223,12 +217,11 @@ const Quiz = () => {
                 setSubmitted(true);
                 setScore(calculatedScore);
 
-                // Refresh user data to update XP
-                const userDataRes = await api.post('/auth/get-user-data');
-                if (userDataRes.data.success) {
-                    // Update badge/league
-                    await api.post('/user/updateBadge');
-                }
+                // Refresh user data to update XP globally
+                await refreshUser();
+
+                // Update badge/league
+                await api.post('/user/updateBadge');
             } else {
                 console.error("Quiz submission failed:", response.data.message);
                 // If backend failed but we have a frontend score, use it
@@ -253,7 +246,7 @@ const Quiz = () => {
                     return count + (userAnswer === correctAnswer ? 1 : 0);
                 }, 0);
                 const frontendScore = Math.round((correctCount / quiz.questions.length) * 100);
-                console.log('Using frontend score due to error:', frontendScore);
+
                 setSubmitted(true);
                 setScore(frontendScore);
             } else {

@@ -18,6 +18,8 @@
     display: flex;
     justify-content: center;
     gap: 1rem;
+    flex-wrap: wrap;
+    /* Allow tabs to wrap on smaller screens */
 }
 
 .tab-btn {
@@ -44,8 +46,56 @@
 }
 
 @media (max-width: 768px) {
+    .admin-wrapper {
+        margin: 1rem auto;
+        padding: 1rem;
+    }
+
     .admin-content {
         grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .admin-tabs {
+        gap: 0.5rem;
+    }
+
+    .tab-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        flex: 1 1 auto;
+        /* Grow to fill space but allow shrinking */
+        text-align: center;
+    }
+
+    .form-card {
+        padding: 1.5rem;
+    }
+
+    .admin-course-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .course-info-summary {
+        width: 100%;
+    }
+
+    .admin-course-item button {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Make delete buttons full width on mobile for easier tapping */
+    .admin-course-item div[style*="display: flex"] {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+
+    .btn-delete-sm {
+        flex: 1;
+        padding: 0.5rem;
     }
 }
 
