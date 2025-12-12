@@ -1,0 +1,317 @@
+/* ================= Premium Page Container ================= */
+.premium-container {
+    padding: 4rem 2rem;
+    min-height: calc(100vh - 80px);
+    background: var(--bg-light);
+    color: var(--text-dark);
+    font-family: 'Outfit', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ================= Premium Hero ================= */
+.premium-hero {
+    text-align: center;
+    margin-bottom: 4rem;
+    animation: fadeInDown 0.8s ease-out;
+}
+
+.premium-hero h1 {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.premium-hero .highlight {
+    color: var(--primary);
+    position: relative;
+    display: inline-block;
+}
+
+/* Add an underline effect similar to Home.css brand-highlight */
+.premium-hero .highlight::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 12px;
+    bottom: 5px;
+    left: 0;
+    background: rgba(107, 143, 113, 0.2);
+    z-index: -1;
+    border-radius: 4px;
+}
+
+.premium-hero p {
+    font-size: 1.2rem;
+    color: var(--text-light);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* ================= Content Layout ================= */
+.premium-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4rem;
+    width: 100%;
+    max-width: 1200px;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+/* ================= Features Section ================= */
+.features-section {
+    flex: 1;
+    min-width: 300px;
+    padding: 1rem;
+}
+
+.features-section h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: var(--text-dark);
+    border-bottom: 2px solid var(--primary-light);
+    padding-bottom: 0.5rem;
+    display: inline-block;
+}
+
+.features-list {
+    list-style: none;
+    padding: 0;
+}
+
+.features-list li {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+}
+
+.feature-icon {
+    font-size: 1.5rem;
+    margin-right: 1.5rem;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 12px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+}
+
+.feature-text h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+    color: var(--primary-dark);
+    font-weight: 600;
+}
+
+.feature-text p {
+    color: var(--text-light);
+    line-height: 1.5;
+}
+
+/* ================= Plans Container & Pricing Cards ================= */
+.plans-container {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    flex: 2;
+}
+
+.pricing-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 320px;
+    text-align: center;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid #eaeaea;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.pricing-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary);
+}
+
+/* Popular/Best Value Tag */
+.popular-tag {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--secondary);
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 10px rgba(217, 124, 84, 0.3);
+}
+
+.plan-name {
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+    margin-top: 0.5rem;
+    color: var(--text-dark);
+    font-weight: 700;
+}
+
+/* Price Display */
+.price {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    color: var(--primary-dark);
+}
+
+.currency {
+    font-size: 1.5rem;
+    margin-right: 4px;
+    font-weight: 600;
+}
+
+.amount {
+    font-size: 3.5rem;
+    font-weight: 700;
+}
+
+.period {
+    color: var(--text-light);
+    margin-left: 5px;
+    font-weight: 500;
+}
+
+/* Plan Features List */
+.plan-features {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 2.5rem;
+    text-align: left;
+    flex-grow: 1;
+    /* Pushes button to bottom */
+}
+
+.plan-features li {
+    margin-bottom: 0.8rem;
+    color: var(--text-dark);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+/* Use a pseudo-element or adjust JS to handle checking icon styling if needed, 
+   but simplistic checks from JS map are fine. */
+
+/* Button */
+.premium-btn {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 50px;
+    background: var(--primary);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(107, 143, 113, 0.3);
+}
+
+.premium-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(107, 143, 113, 0.4);
+}
+
+.premium-btn.disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Guarantee Text */
+.guarantee {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+/* Already Premium State */
+.already-premium {
+    background: linear-gradient(135deg, var(--bg-light) 0%, #E9EFEC 100%);
+    border: 2px solid var(--primary);
+}
+
+.already-premium h2 {
+    color: var(--primary-dark);
+    margin-bottom: 1rem;
+}
+
+/* Animations */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 900px) {
+    .premium-content {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .features-section {
+        width: 100%;
+        max-width: 600px;
+        text-align: center;
+    }
+
+    .features-list li {
+        text-align: left;
+        /* Keep detailed list left-aligned */
+    }
+
+    .premium-hero h1 {
+        font-size: 2.5rem;
+    }
+
+    .pricing-card {
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+}

@@ -14,6 +14,7 @@ const LessonView = () => {
     const [lesson, setLesson] = useState(null);
     const [lessons, setLessons] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [limitReached, setLimitReached] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -32,6 +33,8 @@ const LessonView = () => {
                 const lessonRes = await api.get(`/lessons/getLessons/${lessonId}`);
                 if (lessonRes.data.success) {
                     setLesson(lessonRes.data.lesson);
+                } else if (lessonRes.data.message && lessonRes.data.message.includes("upgrade to premium")) {
+                    setLimitReached(true);
                 }
 
                 // Fetch all lessons for navigation
@@ -65,7 +68,11 @@ const LessonView = () => {
             if (result.success) {
                 // State will update automatically through context
             } else {
-                alert(result.message || 'Failed to mark lesson as complete');
+                if (result.message && result.message.includes("upgrade to premium")) {
+                    setLimitReached(true);
+                } else {
+                    alert(result.message || 'Failed to mark lesson as complete');
+                }
             }
             setCompleting(false);
         }
@@ -78,6 +85,24 @@ const LessonView = () => {
 
     if (loading) {
         return <div className="lesson-view-container"><div className="loading"><div className="loading-spinner"></div></div></div>;
+    }
+
+    if (limitReached) {
+        return (
+            <div className="limit-reached-container">
+                <div className="limit-card">
+                    <div className="limit-icon">🔒</div>
+                    <h1>Daily Limit Reached</h1>
+                    <p>You've reached your daily lesson limit (2 lessons/day). Upgrade to Premium for unlimited access!</p>
+                    <button className="btn-upgrade" onClick={() => navigate('/premium')}>
+                        Upgrade to Premium 👑
+                    </button>
+                    <button className="btn-back" onClick={() => navigate('/courses')}>
+                        Back to Courses
+                    </button>
+                </div>
+            </div>
+        );
     }
 
     if (!course || !lesson) {

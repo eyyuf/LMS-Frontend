@@ -1,0 +1,32 @@
+.payment-cancel-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    background: #0f0c29;
+    color: white;
+}
+
+.cancel-card {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 3rem;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.cancel-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.back-btn {
+    margin-top: 1rem;
+    padding: 0.8rem 2rem;
+    background: #ff4b2b;
+    border: none;
+    border-radius: 20px;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}

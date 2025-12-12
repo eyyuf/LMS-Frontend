@@ -101,11 +101,19 @@ const Leaderboard = () => {
                         <p className="no-data">No leaderboard data available yet.</p>
                     ) : (
                         leaderboard.map((entry, index) => (
-                            <div key={index} className={`leaderboard-item ${entry.name === user?.name ? 'current-user' : ''}`}>
+                            <div key={index} className={`leaderboard-item ${entry.name === user?.name ? 'current-user' : ''} ${entry.premium ? 'premium-user' : ''}`}>
                                 <div className="rank">{index + 1}</div>
                                 <div className="user-info">
                                     <span className="league-icon">{getLeagueIcon(entry.league)}</span>
-                                    <span className="name">{entry.name}</span>
+                                    <span className="name">
+                                        {entry.name}
+                                        {entry.premium && (
+                                            <>
+                                                <span className="premium-badge" title="Premium Member">👑</span>
+                                                <span className="premium-label">Premium</span>
+                                            </>
+                                        )}
+                                    </span>
                                 </div>
                                 <div className="stats">
                                     <span className="xp">{entry.xp || 0} XP</span>
