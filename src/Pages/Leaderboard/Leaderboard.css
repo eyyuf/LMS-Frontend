@@ -59,6 +59,24 @@
     font-weight: bold;
 }
 
+.leaderboard-item.premium-user {
+    border: 2px solid #6B8F71;
+    /* Sage Green Border */
+    background: linear-gradient(to right, #fff, #f0f4f1);
+    /* Subtle green tint */
+    box-shadow: 0 4px 15px rgba(107, 143, 113, 0.3);
+    /* Green glow shadow */
+}
+
+.leaderboard-item.premium-user .name {
+    color: #4A6D56;
+    /* Dark Sage */
+    background: none;
+    /* Remove gradient text */
+    -webkit-text-fill-color: initial;
+    font-weight: 700;
+}
+
 .rank {
     font-size: 1.5rem;
     font-weight: bold;
@@ -109,3 +127,25 @@
 
 
 
+
+.premium-badge {
+    margin-left: 0.5rem;
+    font-size: 1.2rem;
+    vertical-align: middle;
+    filter: none;
+    animation: none;
+}
+
+.premium-label {
+    font-size: 0.7rem;
+    background-color: #6B8F71;
+    /* Primary Sage */
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 0.3rem;
+    vertical-align: middle;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}

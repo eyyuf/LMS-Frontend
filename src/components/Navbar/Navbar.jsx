@@ -39,6 +39,7 @@ const Navbar = () => {
                 <div className={`nav-menu ${isOpen ? 'active' : ''}`}>
                     <Link to="/" className={`nav-item ${isActive('/')}`} onClick={() => setIsOpen(false)}>Home</Link>
                     <Link to="/courses" className={`nav-item ${isActive('/courses')}`} onClick={() => setIsOpen(false)}>Courses</Link>
+                    <Link to="/premium" className={`nav-item ${isActive('/premium')}`} onClick={() => setIsOpen(false)}>Premium</Link>
                     <Link to="/blog" className={`nav-item ${isActive('/blog')}`} onClick={() => setIsOpen(false)}>Blog</Link>
 
                     {user ? (

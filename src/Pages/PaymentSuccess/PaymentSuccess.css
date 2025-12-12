@@ -1,0 +1,21 @@
+.payment-success-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    background: #0f0c29;
+    color: white;
+}
+
+.success-card {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 3rem;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.success-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}

@@ -14,6 +14,9 @@ import Quiz from './Pages/Quiz/Quiz';
 import Leaderboard from './Pages/Leaderboard/Leaderboard';
 import Blog from './Pages/Blog/Blog';
 import VerifyAccount from './Pages/VerifyAccount/VerifyAccount';
+import Premium from './Pages/Premium/Premium';
+import PaymentSuccess from './Pages/PaymentSuccess/PaymentSuccess';
+import PaymentCancel from './Pages/PaymentCancel/PaymentCancel';
 import Footer from './components/Footer/Footer';
 import { CourseProvider } from './context/CourseContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -60,6 +63,9 @@ const AppContent = () => {
                             <Route path="/profile" element={<Profile />} />
                             <Route path="/leaderboard" element={<Leaderboard />} />
                             <Route path="/blog" element={<Blog />} />
+                            <Route path="/premium" element={<Premium />} />
+                            <Route path="/complete" element={<PaymentSuccess />} />
+                            <Route path="/cancel" element={<PaymentCancel />} />
                             <Route path="/verify-account" element={<VerifyAccount />} />
                         </Routes>
                     </div>
