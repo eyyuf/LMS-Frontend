@@ -114,9 +114,11 @@ const Quiz = () => {
                 console.log('Frontend calculated score:', frontendScore, `(${correctCount}/${quiz.questions.length} correct)`);
             }
 
-            // Backend auth middleware sets req.body.userId from token cookie
-            // Try sending as numbers first (some backends expect strings, but we'll try numbers first)
+            // Backend auth middleware sets req.body.userId from token cookie, but the current backend code 
+            // explicitly Destructures userId from req.body (const { userId, answers } = req.body).
+            // So we MUST send it.
             const response = await api.post(`/quiz/submit/${quiz._id}`, {
+                userId: user._id,
                 answers: answerArray
             });
 
